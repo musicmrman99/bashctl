@@ -1,0 +1,12 @@
+Syntax:
+    <{name:funcsafe}> --action=<action>
+    <{name:funcsafe}> [--help[=<action>]]
+
+Description:
+    ??
+
+Options:
+    -h, -?, --help
+        Display help. See `<{name:funcsafe}> --help=help` for more detailed
+        info.
+

@@ -1,0 +1,107 @@
+function <{name:funcsafe}>__error {
+	bashctl__print_error "$@"
+}
+
+function <{name:funcsafe}> {
+	# The following is a modified version of this: http://stackoverflow.com/a/246128
+	local <{name:varsafe}>_source
+	local <{name:varsafe}>_dir
+
+	<{name:varsafe}>_source="${BASH_SOURCE[0]}"
+
+	# resolve $<{name:varsafe}>_source until the file is no longer a symlink
+	while [ -h "$<{name:varsafe}>_source" ]; do
+		<{name:varsafe}>_dir="$(cd -P "$( dirname "$<{name:varsafe}>_source" )" && pwd)"
+		<{name:varsafe}>_source="$(readlink "$<{name:varsafe}>_source")"
+
+		# if $<{name:varsafe}>_source was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+		[[ $<{name:varsafe}>_source != /* ]] && <{name:varsafe}>_source="$<{name:varsafe}>_dir/$<{name:varsafe}>_source"
+	done
+	<{name:varsafe}>_dir="$(cd -P "$( dirname "$<{name:varsafe}>_source" )" && pwd)"
+
+	# ------------------------------------------------------------
+
+	# Option parsing vars
+	local set_op
+	local option
+	local value
+
+	# Action
+	local action='help'
+
+	# Action-specific vars
+	local help_action='<{name:funcsafe}>'
+
+	while [ "$(printf '%s' "$1" | head -c 1)" = '-' ]; do
+		# Whether it is a 'set' (ie. assignment) operation.
+		case "$1" in
+			*'='*)
+				set_op=true
+				option="$(printf '%s' "$1" | cut -f 1 -d'=')"
+				value="$(printf '%s' "$1" | cut -f 2- -d'=')"
+				;;
+			*)
+				set_op=false
+				option="$1"
+				value=false
+				;;
+		esac
+
+		case "$option" in
+			# Set action directly.
+			'-a' | '--action')
+				if [ "$set_op" = false ]; then
+					<{name:funcsafe}>__error true "'-a' or '--action' must have an assignment after it."
+					return -1
+				elif [ "$set_op" = true ]; then
+					case "$value" in
+						'help')
+							action='help'
+							help_action='<{name}>'
+							;;
+
+						*)
+							<{name:funcsafe}>__error true "value of option '%s' is invalid: '%s'" "$option" "$value"
+							return -1
+							;;
+					esac
+				fi
+				;;
+
+			# Help option
+			'-h' | '-?' | '--help')
+				action='help'
+				if [ "$set_op" = false ]; then
+					help_action='<{name}>'
+				elif [ "$set_op" = true ]; then
+					case "$value" in
+						'<{name}>' | 'help')
+							help_action="$value"
+							;;
+
+						*)
+							<{name:funcsafe}>__error true "value of option '%s' is invalid: '%s'" "$option" "$value"
+							return -1
+							;;
+					esac
+				fi
+				;;
+
+			*)
+				printf "unrecognised option: '%s'" "$option"
+				return 1
+				;;
+		esac
+		shift
+	done
+
+	if [ "$action" = 'help' ]; then
+		case "$help_action" in
+			'<{name:funcsafe}>') cat "$<{name:varsafe}>_dir/help/<{name}>.help.txt";;
+			'help')
+				cat "$<{name:varsafe}>_dir/help/<{name}>-$help_action.help.txt";;
+		esac
+		return 0
+	fi
+}
+

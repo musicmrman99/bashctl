@@ -1,0 +1,5 @@
+[list]
+../suite/substitute-modifier.def.sh
+../suite/substitute-modifier.txt
+../suite-help/substitute-modifier.def.sh
+../suite-help/substitute-modifier.txt

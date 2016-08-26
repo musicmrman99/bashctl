@@ -1,0 +1,20 @@
+Syntax:
+    template [--help]
+    template --create (options)
+    template --remove (options)
+
+Description:
+    A function for creating and deleting instances of templates.
+
+Actions:
+    -h, -?, --help
+        Display help. See `template --help=help` for details.
+
+    -c, --create
+        Create an instance of the given template, at the given location, with
+        the given name. See `template --help=create` for details.
+
+    -r, --remove
+        Delete an instance of the given template, at the given location, with
+        the given name. See `template --help=delete` for details.
+

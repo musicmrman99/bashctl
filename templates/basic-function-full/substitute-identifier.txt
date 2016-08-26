@@ -1,0 +1,5 @@
+[list]
+../basic-function/substitute-identifier.def.sh
+../basic-function/substitute-identifier.txt
+../basic-function-help/substitute-identifier.def.sh
+../basic-function-help/substitute-identifier.txt

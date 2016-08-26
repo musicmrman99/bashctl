@@ -1,0 +1,76 @@
+# Note: These bugs each assume that the solutions to previous bugs
+#       have been applied.
+
+# Bug 1
+# --------------------
+# If the backups are unconditionally set to '' when sourcing src
+# and src tries to source itself, then this will happen:
+#   source src
+#    > used=defaults, backups=''
+#   src src:src
+#    > backups=used
+#    > source 'src'
+#    >>> used=used (they were already set)
+#    >>> backups=''
+#    > used=backups (ie. now '')
+# Result: used=''
+
+# Solution
+# ----------
+#   Do not set the backups when sourcing src and `undef` them once
+#   they are no longer needed.
+
+# Bug 2
+# --------------------
+# If globals are unconditionally set to their defaults when sourcing
+# src and source tries to source itself, then the globals will be
+# overridden to their default values.
+
+# Solution
+# ----------
+# Only set globals to their defaults if they are not already set.
+
+# Bug 3
+# --------------------
+# If the globals are unset before exiting `src` in cases where `src` is
+# being called from a script (probably a definition suite, eg.
+# <name>.suite.def.sh), that is being sourced by another instance of `src`,
+# higher in the call stack, then this will happen:
+#   source src
+#     > used=defaults
+#   src <def that calls src, call it 'srcdef'>
+#     > backups=used
+#     > source 'srcdef'
+#     >>> src <an ordinary def, call it 'finaldef'>
+#     >>> > backups=used (again)
+#     >>> > source 'finaldef'
+#     >>> >>> ... define stuff ...
+#     >>> > used=backups (everything is fine, so far)
+#     >>> > backups:undef
+#     > used=backups (backups are now not defined! - so as if they were blank)
+#     > backups:undef (does nothing as they are no longer defined)
+# Result: used=''.
+
+# Solution
+# ----------
+# Note: before this solution was implemented, `src` was renamed to `src__` and
+#       a warpper was made named `src`, to automatically redirect fd 3 and 4
+#       (userout and debug streams, respectively) to stdout.
+
+# This one is harder, because we can't just not undef the backups, as that
+# would revert the solution to Bug 1.
+# Changes made:
+#  1. change the 'src__keep_globals' variable to a local named 'global_control'
+#     and add the corresponding '--global-control=<value>' option, where
+#     <value> is either 'restore' (the default in most cases), or 'keep'
+#     (to actually set globals).
+#  2. then, to actually fix this bug, add an additional value for
+#     'global_control': 'const'. This will make `src` NEVER set, assign to,
+#     or unset any global variable, thereby ensuring that no global will
+#     be modified whenever `src` is being run from within a script being
+#     sourced by `src`, so long as '--global-control=const' is given.
+#  3. change `src` to automatically passes '--global-control=restore' and,
+#     for convenience, add an additional wrapper called `_src`, which
+#     automatically passes '--global-control=const' (as well as the redirects
+#     in the above note), to be used in the circumstances at the end of point 2.
+

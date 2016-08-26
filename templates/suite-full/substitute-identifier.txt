@@ -1,0 +1,5 @@
+[list]
+../suite/substitute-identifier.def.sh
+../suite/substitute-identifier.txt
+../suite-help/substitute-identifier.def.sh
+../suite-help/substitute-identifier.txt

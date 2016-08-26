@@ -1,0 +1,25 @@
+# The original version I shoved directly in my .bashrc, for reference (and laughs ;) ).
+# The 'split-join' utility I wrote in C++ is basically just a single-purpose version of
+# slicing in python, without the overhead of python's initialization/shutdown.
+# For example:
+#   bash:   `split-join '/' '1:-1' '/this/path/to/a/file'`
+#                      --^--  ^-----------+---------------------
+#                     /     \-------------+----------------\    \
+#                    V                    V                 V    V
+#   python: `print( '/'.join( '/this/path/to/a/file'.split('/')[1:-1] ) )`
+# both produce: 'this/path/to'
+
+for def_type in $(find "$BASHRC_USER_PREFIX" -mindepth 1 -maxdepth 1 -type d); do
+	for def_file in $(find "$def_type" -mindepth 1 -maxdepth 1 -type f); do
+		# REALLY SLOW:
+		#if [ "$(python3 -c "print('.'.join('$def_file'.split('.')[1:]))")" != 'def.sh' ]; then
+
+		# Better:
+		def_file_extension="$(split-join '/' '-1:' "$def_file" | split-join '.' '1:')"
+		if [ "$def_file_extension" != 'def.sh' ]; then
+			continue
+		fi
+		. "$def_file"
+	done
+done
+

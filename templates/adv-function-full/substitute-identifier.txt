@@ -1,0 +1,5 @@
+[list]
+../adv-function/substitute-identifier.def.sh
+../adv-function/substitute-identifier.txt
+../adv-function-help/substitute-identifier.def.sh
+../adv-function-help/substitute-identifier.txt

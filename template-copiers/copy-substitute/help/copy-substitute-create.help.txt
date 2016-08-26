@@ -1,0 +1,15 @@
+Syntax:
+    template --create --template=<template> --root=<root> --path=<path>
+             --name=<name>
+
+Description:
+    Create an instance of the given template at the specified location
+    (determined by concatenating the given root and the given path together)
+    with the given name.
+
+    First, all files found in the template given are copied to the specified
+    location. Then each copied file is parsed, certain strings are substituted
+    for other strings. These string are listed in a seperate help file - see
+    `template --help=substitutions` for the substitution format and a list of
+    currently interpreted strings.
+

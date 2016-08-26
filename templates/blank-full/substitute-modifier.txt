@@ -1,0 +1,5 @@
+[list]
+../blank/substitute-modifier.def.sh
+../blank/substitute-modifier.txt
+../stub-help/substitute-modifier.def.sh
+../stub-help/substitute-modifier.txt

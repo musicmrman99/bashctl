@@ -1,0 +1,5 @@
+[list]
+../basic-function/substitute-modifier.def.sh
+../basic-function/substitute-modifier.txt
+../basic-function-help/substitute-modifier.def.sh
+../basic-function-help/substitute-modifier.txt

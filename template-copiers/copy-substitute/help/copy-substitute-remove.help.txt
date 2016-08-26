@@ -1,0 +1,12 @@
+Syntax:
+    template --remove --template=<template> --root=<root> --path=<path>
+             --name=<name>
+
+Description:
+    Remove an instance of the given template at the specified location
+    (determined by concatenating the given root and the given path together)
+    with the given name.
+
+    First, determine which file the 'create' action would have created, given
+    these parameters, then delete all of those files.
+

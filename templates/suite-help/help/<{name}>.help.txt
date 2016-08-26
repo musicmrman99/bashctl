@@ -1,0 +1,7 @@
+Syntax:
+    _suite__<{name:funcsafe}> (--help|-h|-?)
+    _suite__<{name:funcsafe}>
+
+Description:
+    A suite containing ...
+

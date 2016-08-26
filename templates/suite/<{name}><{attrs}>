@@ -1,0 +1,43 @@
+function _suite__<{name:funcsafe}> {
+	# The following is a modified version of this: http://stackoverflow.com/a/246128
+	local <{name:varsafe}>_source
+	local <{name:varsafe}>_dir
+
+	<{name:varsafe}>_source="${BASH_SOURCE[0]}"
+
+	# resolve $<{name:varsafe}>_source until the file is no longer a symlink
+	while [ -h "$<{name:varsafe}>_source" ]; do
+		<{name:varsafe}>_dir="$(cd -P "$( dirname "$<{name:varsafe}>_source" )" && pwd)"
+		<{name:varsafe}>_source="$(readlink "$<{name:varsafe}>_source")"
+
+		# if $<{name:varsafe}>_source was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+		[[ $<{name:varsafe}>_source != /* ]] && <{name:varsafe}>_source="$<{name:varsafe}>_dir/$<{name:varsafe}>_source"
+	done
+	<{name:varsafe}>_dir="$(cd -P "$( dirname "$<{name:varsafe}>_source" )" && pwd)"
+
+	# ------------------------------------------------------------
+
+	local help=false
+
+	while [ "$(printf '%s' "$1" | head -c 1)" = '-' ]; do
+		case "$1" in
+			'-h' | '-?' | '--help') help=true;;
+			*)
+				printf "unrecognised option: '%s'" "$1"
+				return 1
+				;;
+		esac
+		shift
+	done
+
+	if [ "$help" = true ]; then
+		cat "$<{name:varsafe}>_dir/help/<{name}>.help.txt"
+		return 0
+	fi
+
+	local ref='<{path:bashctl-reference}>'
+	const-src ${ref}${ref:+:}<{name}>-suite:.*
+}
+
+_suite__<{name:funcsafe}>
+

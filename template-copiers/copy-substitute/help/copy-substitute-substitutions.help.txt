@@ -1,0 +1,28 @@
+Substitution Syntax:
+    <{identifier:modifier[,modifier[,...]]}>
+
+Description:
+    The identifier spcify which value to substitute with. The modifiers specify
+    what modifications to make to the substituted value.
+
+Recognized identifiers:
+    template, root, path, name
+        These are substituted with the respective parameters given to 'create'.
+
+Recognized modifiers:
+    funcsafe
+        This replaces any ' ' characters to '_' and any '/' characters with
+        '__'. This should make whatever is given safe for a function identifier.
+
+    varsafe
+        This replaces any ' ' and '-' characters with '_' and any '/' characters
+        with '__', then repeatedly deletes the first character until it is a
+        lower or upper case letter, or an underscore, and finally deletes any
+        character that is not a lower or upper case letter, a number, or an
+        underscore. This should make whatever is given safe for a variable
+        identifier.
+
+    bashctl-reference
+        This translates all '/' characters into ':' characters. This may help in
+        making the 'path' identifier safe for use as a bashctl reference.
+

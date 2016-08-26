@@ -1,0 +1,5 @@
+[list]
+../blank/substitute-identifier.def.sh
+../blank/substitute-identifier.txt
+../stub-help/substitute-identifier.def.sh
+../stub-help/substitute-identifier.txt
