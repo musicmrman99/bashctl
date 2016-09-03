@@ -552,7 +552,7 @@ function template {
 					help_action='template'
 				elif [ "$set_op" = true ]; then
 					case "$value" in
-						'template' | 'help')
+						'template' | 'help' | 'create' | 'remove' | 'substitutions')
 							help_action="$value"
 							;;
 
