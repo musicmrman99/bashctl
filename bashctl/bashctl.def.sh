@@ -2336,6 +2336,7 @@ function bashctl__ {
 
 	# Special vars
 	local bashctl_set_active_status=''
+	local bashctl_update_symlinks=false
 
 	# Used in various places.
 	local global_control='reset'
@@ -2372,6 +2373,15 @@ function bashctl__ {
 							return -2
 							;;
 					esac
+				fi
+				;;
+
+			'--update-symlinks')
+				if [ "$set_op" = false ]; then
+					bashctl_update_symlinks=true
+				elif [ "$set_op" = true ]; then
+					bashctl__print_error true ""
+					return -1
 				fi
 				;;
 
@@ -2419,6 +2429,14 @@ function bashctl__ {
 
 	if [ -e "$BASH_LIB_ROOT/.inactive" ]; then
 		return 2
+	fi
+
+	if [ "$bashctl_update_symlinks" = true ]; then
+		(
+			. "$BASH_LIB_ROOT/bashctl-utils/update-symlinks.def.sh"
+			update_symlinks
+		)
+		return 0
 	fi
 
 	bashctl__store_globals "$global_control"
