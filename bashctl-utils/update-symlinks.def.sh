@@ -44,7 +44,7 @@ function update_symlinks {
 	mkdir "$BASH_LIB_ROOT"
 	printf '%0.s-' {1..20}; printf '\n'
 
-	local blacklist
+	local whitelist
 	local blacklist
 
 	local top_dirs_suffix
