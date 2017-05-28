@@ -30,6 +30,8 @@
 # Set Defaults (CONST)
 # --------------------------------------------------
 
+bashctl__default__component="/bashctl"
+
 bashctl__default__color='nocolor'
 bashctl__default__quiet=false
 bashctl__default__force=false
@@ -514,6 +516,8 @@ function bashctl__set_global_defaults {
 		return 64
 	fi
 
+	bashctl__component="${bashctl__component-$bashctl__default__component}"
+
 	bashctl__color="${bashctl__color-$bashctl__default__color}"
 	bashctl__quiet="${bashctl__quiet-$bashctl__default__quiet}"
 	bashctl__force="${bashctl__force-$bashctl__default__force}"
@@ -555,6 +559,8 @@ function bashctl__store_globals {
 	if [ "$global_control" = 'const' ]; then
 		return 64
 	fi
+
+	bashctl__backup__component="$bashctl__component"
 
 	bashctl__backup__color="$bashctl__color"
 	bashctl__backup__quiet="$bashctl__quiet"
@@ -602,6 +608,8 @@ function bashctl__unset_globals {
 	fi
 
 	if [ "$unset_backups" = true ]; then
+		unset bashctl__backup__component
+
 		unset bashctl__backup__color
 		unset bashctl__backup__quiet
 		unset bashctl__backup__force
@@ -622,6 +630,8 @@ function bashctl__unset_globals {
 		unset bashctl__backup__required_attrs
 		unset bashctl__backup__information_attrs
 	else
+		unset bashctl__component
+
 		unset bashctl__color
 		unset bashctl__quiet
 		unset bashctl__force
@@ -663,6 +673,8 @@ function bashctl__restore_globals {
 	fi
 
 	if [ "$global_control" = 'reset' ]; then
+		bashctl__component="$bashctl__backup__component"
+
 		bashctl__color="$bashctl__backup__color"
 		bashctl__quiet="$bashctl__backup__quiet"
 		bashctl__force="$bashctl__backup__force"
@@ -706,6 +718,9 @@ function bashctl__print_globals {
 	fi
 
 	if [ "$global_control" = 'get' ]; then
+		bashctl__print_term 'normal' false "bashctl__component('%s')\n" "$bashctl__component"
+
+		bashctl__print_term 'normal' '\n'
 		bashctl__print_term 'normal' false "bashctl__color('%s')\n" "$bashctl__color"
 		bashctl__print_term 'normal' false "bashctl__quiet('%s')\n" "$bashctl__quiet"
 		bashctl__print_term 'normal' false "bashctl__force('%s')\n" "$bashctl__force"
@@ -764,6 +779,23 @@ function bashctl__set_global_option {
 	local append_value
 
 	case "$option" in
+		# Location
+		# --------------------
+		'-Comp' | '--bashctl-component')
+			if [ "$set_op" = false ]; then
+				bashctl__print_error true "'-Comp' or '--bashctl-component' must have an assignment after it."
+				return -2
+			elif [ "$set_op" = true ]; then
+				case "$value" in
+					*/*)
+						bashctl__print_error true "value of option '%s' is invalid: '%s'" "$option" "$value"
+						return -2
+						;;
+					*) bashctl__component="$value";;
+				esac
+			fi
+			;;
+
 		# Preferences/Settings
 		# --------------------
 		'-C' | '--color')
@@ -1485,27 +1517,34 @@ function bashctl__select_version {
 # --------------------------------------------------
 
 # type: direct
-# signature: bashctl__create cur_components_dir component def_path def_name
-#                            [template [template_options [template_copier]]]
+# signature: bashctl__create cur_components_dir def_component def_path def_name
+#                            [template [template_options [template_copier
+#                            [bashctl_component] ]]]
 # return:
 #   -1 if given arguments are invalid.
 #   1 if creation fails
 function bashctl__create {
 	local cur_components_dir
-	local component
+
+	# to
+	local def_component
 	local def_path
 	local def_name
 
+	# template information
 	local template
 	local template_options
 	local template_copier
+
+	# from
+	local bashctl_component
 
 	bashctl__arg 'cur_components_dir' "$1" false && \
 		cur_components_dir="$1" && shift || \
 		return -1
 
-	bashctl__arg 'component' "$1" false && \
-		component="$1" && shift || \
+	bashctl__arg 'def_component' "$1" false && \
+		def_component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -1526,6 +1565,10 @@ function bashctl__create {
 		template_copier="$1" && shift || \
 		template_copier="$bashctl__default_template_copier"
 
+	bashctl__arg 'bashctl_component' "$1" true && \
+		bashctl_component="$1" && shift || \
+		bashctl_component="$bashctl__component"
+
 	# The `template` function defined in the given template copier is meant to
 	# instantiate the template into the given location. However, precisely what
 	# this function does is not defined here. See the documentation of the
@@ -1538,14 +1581,14 @@ function bashctl__create {
 	# returns, as it is no longer needed. 
 
 	(
-		. "$cur_components_dir/bashctl/template-copiers/$template_copier/$template_copier.def.sh"
+		. "$cur_components_dir/$bashctl_component/template-copiers/$template_copier/$template_copier.def.sh"
 		# FIXME [1]
-		template --create --template="$template" --root="$cur_components_dir" --component="$component" --path="$def_path" --name="$def_name" -- $template_options
+		template --create --template="$template" --root="$cur_components_dir" --component="$def_component" --path="$def_path" --name="$def_name" -- $template_options
 	)
 
 	if [ $? != 0 ]; then
 		bashctl__print_error true "creating new definition failed: template '%s', options '%s' -> '%s'" \
-			"$template" "$template_options" "[$component]$(bashctl__path_to_ref "$def_path" "$def_name")"
+			"$template" "$template_options" "[$def_component]$(bashctl__path_to_ref "$def_path" "$def_name")"
 		bashctl__print_warning true "... skipping what has not been done ..."
 
 		return 1
@@ -1565,20 +1608,26 @@ function bashctl__create {
 #   1 if deletion fails
 function bashctl__delete {
 	local cur_components_dir
-	local component
+
+	# to
+	local def_component
 	local def_path
 	local def_name
 
+	# template information
 	local template
 	local template_options
 	local template_copier
+
+	# from
+	local bashctl_component
 
 	bashctl__arg 'cur_components_dir' "$1" false && \
 		cur_components_dir="$1" && shift || \
 		return -1
 
-	bashctl__arg 'component' "$1" false && \
-		component="$1" && shift || \
+	bashctl__arg 'def_component' "$1" false && \
+		def_component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -1599,6 +1648,10 @@ function bashctl__delete {
 		template_copier="$1" && shift || \
 		template_copier="$bashctl__default_template_copier"
 
+	bashctl__arg 'bashctl_component' "$1" true && \
+		bashctl_component="$1" && shift || \
+		bashctl_component="$bashctl__component"
+
 	# The `template` function defined in the given template copier is meant to
 	# delete the files that would have been copied to the given location when
 	# created with the given template. However, precisely what this function
@@ -1612,14 +1665,14 @@ function bashctl__delete {
 	# returns, as it is no longer needed.
 
 	(
-		. "$cur_components_dir/bashctl/template-copiers/$template_copier/$template_copier.def.sh"
+		. "$cur_components_dir/$bashctl_component/template-copiers/$template_copier/$template_copier.def.sh"
 		# FIXME [1]
-		template --delete --template="$template" --root="$cur_components_dir" --component="$component" --path="$def_path" --name="$def_name" -- $template_options
+		template --delete --template="$template" --root="$cur_components_dir" --component="$def_component" --path="$def_path" --name="$def_name" -- $template_options
 	)
 
 	if [ $? != 0 ]; then
 		bashctl__print_error true "deleting definition failed: '%s' (reference template '%s', options '%s')" \
-			"[$component]$(bashctl__path_to_ref "$def_path" "$def_name")" "$template" "$template_options"
+			"[$def_component]$(bashctl__path_to_ref "$def_path" "$def_name")" "$template" "$template_options"
 		bashctl__print_warning true "... skipping what has not been done ..."
 
 		return 1
@@ -2464,7 +2517,7 @@ function bashctl__ {
 
 	if [ "$bashctl_update_symlinks" = true ]; then
 		(
-			. "$BASH_LIB_COMPONENT_ROOT/bashctl/bashctl-utils/update-symlinks.def.sh"
+			. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl-utils/update-symlinks.def.sh"
 			update_symlinks
 		)
 		return 0
@@ -2516,7 +2569,6 @@ function bashctl__ {
 							;;
 
 						*)
-							# Defined in "$BASH_LIB_COMPONENT_ROOT"/bashctl/bashctl/bashctl.def.sh
 							bashctl__print_error true "value of option '%s' is invalid: '%s'" "$option" "$value"
 							bashctl__restore_globals "$global_control"; return -1
 							;;
@@ -2839,9 +2891,9 @@ function bashctl__ {
 		bashctl__print_debug true 2 "version('%s')\n" "$version"
 
 		# Skip due to:
-		#   - explicit input/bashctl__assume_version global
+		#   - explicit input OR bashctl__assume_version global
 		#   - debugging
-		#   - invalid input/bashctl__assume_version global
+		#   - invalid input OR bashctl__assume_version global
 		case $? in
 			64 | 65 | 66)
 				continue;;
