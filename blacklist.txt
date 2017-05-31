@@ -3,3 +3,4 @@ misc-info(/.*)?
 templates-old(/.*)?
 LICENSE
 README.md
+TEMPLATES.md
