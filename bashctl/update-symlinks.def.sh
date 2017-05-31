@@ -38,11 +38,14 @@ function update_symlinks__match {
 }
 
 function update_symlinks {
-	printf "rm('%s')\n" "$BASH_LIB_ROOT"
+	bashctl__print_debug true 1 "rm('%s')\n" "$BASH_LIB_ROOT"
 	rm -r "$BASH_LIB_ROOT"
-	printf "mkdir('%s')\n" "$BASH_LIB_ROOT"
+	bashctl__print_debug true 1 "mkdir('%s')\n" "$BASH_LIB_ROOT"
 	mkdir "$BASH_LIB_ROOT"
-	printf '%0.s-' {1..20}; printf '\n'
+
+	if [ "$bashctl__debug" -ge 2 ]; then
+		printf '%0.s-' {1..20}; printf '\n'
+	fi
 
 	local whitelist
 	local blacklist
@@ -83,7 +86,7 @@ cut -c $(printf '%s' "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/x" | wc -c)-)"
 			fi
 
 			# Create the directory as a real directory (not a symlink).
-			printf "mkdir('%s')\n" "$BASH_LIB_ROOT/$dir_suffix"
+			bashctl__print_debug true 2 "mkdir('%s')\n" "$BASH_LIB_ROOT/$dir_suffix"
 			mkdir "$BASH_LIB_ROOT/$dir_suffix"
 		done
 
@@ -96,7 +99,7 @@ cut -c $(printf '%s' "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/x" | wc -c)-)"
 				update_symlinks__match --all --not "$file_suffix" < "$blacklist" || continue
 			fi
 
-			printf "ln('%s' -> '%s')\n" "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/$file_suffix" "$BASH_LIB_ROOT/$file_suffix"
+			bashctl__print_debug true 2 "ln('%s' -> '%s')\n" "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/$file_suffix" "$BASH_LIB_ROOT/$file_suffix"
 			ln -s "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/$file_suffix" "$BASH_LIB_ROOT/$file_suffix"
 		done
 	done
