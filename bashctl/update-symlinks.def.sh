@@ -9,12 +9,17 @@
 # Update Symlinks
 # --------------------------------------------------
 
+# type: direct
+# signature: update_symlinks__match [--all] [--not] string
+# stdin: patterns
+# return:
+#   0 if:
+#     ''            = string matches any line of patterns
+#     '--not'       = string fails to match one line of patterns
+#     '--all'       = string matches all lines of patterns
+#     '--all --not' = string matches no lines of patterns
+#   1 if not 0
 function update_symlinks__match {
-	# ''            = one does match -> return true
-	# '--not'       = one does not match -> return true
-	# '--all'       = (shortcut) one does not match -> return false
-	# '--all --not' = (shortcut) one does match -> return false
-
 	local return_val=0
 
 	local not=''
@@ -48,6 +53,8 @@ function update_symlinks__match {
 	return $((! $return_val))
 }
 
+# type: direct
+# signature: update_symlinks
 function update_symlinks {
 	bashctl__print_debug true 1 "rm('%s')\n" "$BASH_LIB_ROOT"
 	rm -r "$BASH_LIB_ROOT"
