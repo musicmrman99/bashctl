@@ -2517,7 +2517,7 @@ function bashctl__ {
 
 	if [ "$bashctl_update_symlinks" = true ]; then
 		(
-			. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl-utils/update-symlinks.def.sh"
+			. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl/update-symlinks.def.sh"
 			update_symlinks
 		)
 		return 0
