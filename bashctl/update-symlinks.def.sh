@@ -1,3 +1,14 @@
+# Global Functions
+# ----------------------------------------------------------------------------------------------------
+
+# Documentation Requirements
+# --------------------------------------------------
+
+# See '/DOCUMENTATION.md'
+
+# Update Symlinks
+# --------------------------------------------------
+
 function update_symlinks__match {
 	# ''            = one does match -> return true
 	# '--not'       = one does not match -> return true
