@@ -76,6 +76,9 @@ BASH_LIB_COMPONENT_ROOT="$HOME/Bash Library - Components"
 if [ ! -f "$BASH_LIB_ROOT/bashctl/bashctl.def.sh" ]; then
     printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/bashctl.def.sh: file not found!"
     return 1
+elif [ ! -f "$BASH_LIB_ROOT/bashctl/helpers.def.sh" ]; then
+    printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/helpers.def.sh: file not found!"
+    return 1
 elif [ ! -f "$BASH_LIB_ROOT/bashctl/init.sh" ]; then
     printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/init.sh: file not found!"
     return 1
