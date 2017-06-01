@@ -3,55 +3,102 @@ bashctl is a small set of functions (the full list is available in the main help
 
 ## A little history
 ###### (skip this bit if you don't care and just want to use it)
-To be honest, I didn't even look for software or scripts for script/definition development and management before I wrote this. This was partially because at the time I didn't do much customization and because this project started out a lot smaller than it is now. [The very original version](https://github.com/musicmrman99/bashctl/blob/master/misc-info/src.sh.orig) was put straight into my `.bashrc`. Then it grew a bit and I put it in a separate script I sourced in my `.bashrc` called `ualias.sh` (for 'User-defined Aliases', ie. not the predefined ones in Ubuntu's default `.bashrc`), as it was originally only for organizing aliases, before I got onto writing more complex scripts and functions. I thought it would be quicker to write something myself just to source the aliases I used than to search for something that did the same, and originally it probably was. But then you get that 'oh, I need it to do *this* as well', 'ooh, and *this*', 'and *that*', ... You know, each time you wanted another feature, you keep thinking "well, it's just one more feature, it can't be that hard ...". And each individual feature wasn't too hard (sort of), only, they kept piling up.
+To be honest, I didn't even look for software or scripts for script/definition development and management before I wrote this. This was partially because at the time I didn't do much customization and because this project started out a lot smaller than it is now. [The very original version](https://github.com/musicmrman99/bashctl/blob/master/misc-info/src.sh.orig) was put straight into my `.bashrc`. Then it grew a bit and I put it in a separate script I sourced in my `.bashrc` called `ualias.sh` (for 'User-defined Aliases', ie. not the predefined ones in Ubuntu's default `.bashrc`), as it was originally only for organizing aliases, before I got onto writing more complex scripts and functions. I thought it would be quicker to write something myself just to source the aliases I used than to search for something that did the same, and originally it probably was. But then I started to get think 'oh, I need it to do *this* as well', 'ooh, and *this*', 'and *that*', ... Each time I wanted another feature, I kept thinking "well, it's just one more feature, it can't be that hard ...". And each individual feature wasn't too hard (sort of), only, they kept piling up.
 
-Over time it changed to encompass functions and the name was changed to `src` (in fact, I kept that name for that part of `bashctl`). Then I added the ability to execute scripts as well as source them and the name changed to `bash-exec`. But `bash-exec` sounds a bit too similar to the `exec` system call, which doesn't work in the same way that `bash-exec` actually did. So, I changed its name one last time to `bashctl`, without modifying any code (the name is derived from `systemctl`, from systemd - that 'init system' that it seems nobody except its own devs and some sysadmins seem to like).
+Over time `ualias` changed to encompass functions and the name was changed to `src` (in fact, I kept that name for that part of `bashctl`). Then I added the ability to execute scripts as well as source them and the name changed to `bash-exec`. But `bash-exec` sounds a bit too similar to the `exec` system call, which doesn't work in the same way that `bash-exec` actually did. So, I changed its name one last time to `bashctl`, without modifying any code (the name is derived from `systemctl`, from systemd).
 
-This little project may well gather dust, and end up only being used by me, but there's no reason not to share ... just in case.
+Then, when I finally plucked up the courage to share my code on GitHub, I realised I had an irritation: `.git`. That folder and the other files that GitHub adds to a project, like `README.md` and `LICENSE`, looked messy in my Bash Library once I'd pulled the repo in, not to mention the fact that I could *theoretically* execute these files with `bashctl`. So, back to the editor for me ;) I invented a system whereby I could:
+1. hold the files for the library in subdirectories of a separate directory (`$BASH_LIB_COMPONENTS_ROOT`, for which I often use the folder `~/Bash Library - Components`), then
+2. symlink to these files in the main library (`$BASH_LIB_ROOT`, usually `~/Bash Library`), excluding any files I don't want to show through the use of a blacklist file (`blacklist.txt`).
+
+As for the present, this little project may well gather dust and end up only being used by me, but there's no reason not to share ... just in case.
 
 ## Why use it?
 ###### (you should probably still read this, though)
-Because it's useful. It's not **awesome**, just useful.
+Because it's useful. It's not **awesome**, it doesn't reimagine how you use the shell and it's not the perfect tool for *every* job. It's just useful for some.
 
 Reasons why it's useful:
-- It is simple. Well, it's actually not that simple, but you don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit) on single files.
-- It is local. I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow?
-- It is location-independent. It does not matter where you put the contents of the repo, only that you source the relevant files and set the appropriate (global) variable in your `.bashrc` (more on that next).
+- It's simple
+  - Well, it's actually not that simple, but you don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit) on single files.
+
+- It's local.
+  - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow?
 
 ## Setup
-You can place it anywhere, so long as you set your `BASH_LIB_ROOT` accordingly. This is the way I would set it up ...
+This is the way I would set up basctl, but change it to suit yourself ...
 
-Clone:
+### Required setup
+Create components directory and bashctl's component directory:
 ```
-# Or however you would name this directory.
+# Or however you want to name these directories.
 mkdir -p "$HOME/Bash Library"
-
-# Then clone into it.
-git clone https://github.com/musicmrman99/bashctl.git "$HOME/Bash Library/"
+mkdir -p "$HOME/Bash Library - Components"
+mkdir -p "$HOME/Bash Library - Components/bashctl"
 ```
 
-Then add at least this to your `.bashrc`:
+Clone into the `bashctl` component:
 ```
-# Or wherever you put it.
+git clone https://github.com/musicmrman99/bashctl.git "$HOME/Bash Library - Components/bashctl/"
+```
+
+Build the main library (of symlinks) for the first time - this is a 'chicken and egg' problem, so it's quite long:
+```
+# These will later be set on shell startup by bash (from your '.bashrc' file).
 BASH_LIB_ROOT="$HOME/Bash Library"
+BASH_LIB_COMPONENT_ROOT="$HOME/Bash Library - Components"
+
+# This will be set on shell startup by bashctl, once we've set up the library
+# and '.bashrc'.
+# Set this here so the following commands know where to find bashctl's files.
+bashctl__component="/bashctl"
+
+# Source bashctl.
+. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl/bashctl.def.sh"
+. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl/helpers.def.sh"
+. "$BASH_LIB_COMPONENT_ROOT/$bashctl__component/bashctl/init.sh"
+
+# Set this again here, so `bashctl` knows where to find `update_symlinks`.
+# 'init.sh' will have just overwritten it with the default value, so if you set
+# it to anything other than '/bashctl' earlier, you'll have to re-set it.
+bashctl__component="/bashctl"
+
+# Perform the update. It shouldn't output anything unless debugging is on.
+bashctl --update-symlinks
+```
+
+Finally, add at least this to your `.bashrc`:
+```
+# Or whatever you called these.
+BASH_LIB_ROOT="$HOME/Bash Library"
+BASH_LIB_COMPONENT_ROOT="$HOME/Bash Library - Components"
 
 # Just in case something bad happens.
 if [ ! -f "$BASH_LIB_ROOT/bashctl/bashctl.def.sh" ]; then
     printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/bashctl.def.sh: file not found!"
     return 1
-elif [ ! -f "$BASH_LIB_ROOT/bashctl/bashctl-init.def.sh" ]; then
-    printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/bashctl-init.def.sh: file not found!"
+elif [ ! -f "$BASH_LIB_ROOT/bashctl/init.sh" ]; then
+    printf '%s\n' "Error: $BASH_LIB_ROOT/bashctl/init.sh: file not found!"
     return 1
 fi
 
 . "$BASH_LIB_ROOT/bashctl/bashctl.def.sh"
-. "$BASH_LIB_ROOT/bashctl/bashctl-init.def.sh"
+. "$BASH_LIB_ROOT/bashctl/helpers.def.sh"
+. "$BASH_LIB_ROOT/bashctl/init.sh"
+
+# Note: If you cloned bashctl into a component named anything other than
+#       'bashctl', then you'll have to set the to the name of the component you
+#       cloned it into here.
+#bashctl-set --bashctl-component='/[component-name]'
 ```
 
-After that, you may also want to set some preferences and other settings (all implemented as global variables). These are my settings, for example:
+### Optional Setup
+After the code you put into your `.bashrc` earlier, you may also want to set some preferences and other settings. These are my settings, for example:
 ```
+# Note: Preferences are implemented as bash global variables, so be aware of
+#       this when dealing with subshels, su/sudo, etc.
+
 # Preferences
-# C=color, T=default-template, -To=default-template-options (-t=type, -e=extension), E=default-editor
+# C=color, T=default-template, To=default-template-options (t=type, e=extension), E=default-editor
 bashctl-set -C -T=basic-function-full -To='-t=definition -e=dev' -E=nano
 
 # Other Settings
@@ -68,7 +115,7 @@ And after that, you may also want to source some things on tty/terminal startup.
 src --quiet 'aliases|functions|variables|tmp:.*'
 ```
 
-Finally, after sourcing the above, you might want to enable the `force` setting generally. The `force` setting forces bashctl to run/source any files that match the references you give, regardless of their attributes. Personally, I don't, and for good reason - accidentally running something with an, eg. `dev` attribute (for 'under development'), may well be very bad. But on the other hand, "If I say run it, THEN RUN IT - DON'T COMPLAIN ABOUT IT!" ... sometimes applies :wink:.
+After sourcing the above, you might want to enable the `force` setting generally. The `force` setting forces bashctl to run/source any files that match the references you give, regardless of their attributes. Personally, I don't, and for good reason - accidentally running something with an, eg. `dev` attribute (for 'under development'), could well end up being *very bad* for your system. But on the other hand, "If I say run it, THEN RUN IT - DON'T COMPLAIN ABOUT IT!" ... sometimes applies :wink:.
 ```
 bashctl-set -F
 ```
