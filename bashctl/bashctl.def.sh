@@ -4,22 +4,21 @@
 #         file is to avoid a syntax highlighting bug in gedit, relating to the
 #         'case' statement.
 
-# Note 2: Some parts of this scripts used to use a program I wrote called 'split-join'.
-#         However, 'split-join' is not a Unix, GNU, or other common utility (its userbase
-#         is 1 person - me), so I replaced calls to it with 'cut', plus in some cases
-#         wrapping it with two 'rev' calls to handle negative offsets. That's what all the
-#         'vs. split-join:' notes are about.
+# Note 2: Some parts of this scripts used to use a program I wrote called
+#         'split-join'. However, 'split-join' is not a Unix, GNU, or other
+#         common utility (its userbase is 1 person - me), so I replaced calls to
+#         it with 'cut', plus in some cases wrapping it with two 'rev' calls to
+#         handle negative offsets. That's what all the 'vs. split-join:' notes
+#         are about.
 
-# References
-# --------------------
+# Note 3: The '-L' option means 'always dereference symlinks' - THIS MAY BREAK
+#         in circumstances of recursive linking, but it facilitates symlinking
+#         of scripts/definitions from the library to the library components
+#         directories.
 
-# Note 3: The '-L' means 'always dereference symlinks' - THIS MAY BREAK
-#         in circumstances of recursive linking, but it also facilitates
-#         symlinking of scripts/definitions.
-
-# FIXME 1: Leaving $template_options unqoted will split it at whitespace,
-#          but we don't want to split it at whitespace, we want to split
-#          it at argument bounderies!
+# FIXME 1: Leaving $template_options unqoted will split it at whitespace, but we
+#          don't want to split it at whitespace, we want to split it at argument
+#          bounderies!
 
 # Global Variables
 # ----------------------------------------------------------------------------------------------------
@@ -897,10 +896,10 @@ function bashctl__set_global_option {
 			fi
 			;;
 
-		# Note: '-Dx' != '-D=x', the former doesn't exist, but it is
-		#       in the correct format, the latter would mean something
-		#       completely different, if it was valid (it's not as 'x'
-		#       is not an integer).
+		# Note: '-Dx' != '-D=x'. The former doesn't exist, but it is
+		#       in the correct format. The latter would mean something
+		#       completely different, if it was valid (it's not valid
+		#       because 'x' is not an integer).
 
 		'-Dm' | '--debug-matches')
 			if [ "$set_op" = false ]; then
@@ -1188,7 +1187,7 @@ function bashctl__resolve_reference {
 
 	local def_paths=''
 	local def_names=''
-	local full_def_list=''
+	local def_list=''
 
 	local cur_ref_part
 	local remaining_ref_parts
@@ -1214,7 +1213,7 @@ function bashctl__resolve_reference {
 	bashctl__print_debug true 3 "def_names('%s')\n" "$def_names"
 
 	if [ ! -z "$def_names" ]; then
-		full_def_list="$(bashctl__append "$full_def_list" "$def_names")"
+		def_list="$(bashctl__append "$def_list" "$def_names")"
 	fi
 
 	# vs. with 'split-join' (the 'case' is only needed with 'cut'):
@@ -1251,7 +1250,7 @@ function bashctl__resolve_reference {
 				bashctl__print_debug true 3 "def_names:in_group('%s')\n" "$def_names"
 
 				if [ ! -z "$def_names" ]; then
-					full_def_list="$(bashctl__append "$full_def_list" "$def_names")"
+					def_list="$(bashctl__append "$def_list" "$def_names")"
 				fi
 
 # vs. with 'split-join':
@@ -1263,8 +1262,8 @@ EOF
 	fi
 
 	# Remove blank lines.
-	full_def_list="$(printf '%s' "$full_def_list" | sed -e '/^$/d')"
-	printf '%s' "$full_def_list"
+	def_list="$(printf '%s' "$def_list" | sed -e '/^$/d')"
+	printf '%s' "$def_list"
 	return 0
 }
 
@@ -1418,7 +1417,7 @@ function bashctl__select_version {
 		# TODO: Does it need to check for dots (the attribute-delimination character),
 		#       and what to do if it finds any?
 
-		# This is a built-in.
+		# This is a built-in extension (i.e. a special identifier).
 		if [ "$(printf '%s' "$def_version_ext" | head -c 1)" = '/' ]; then
 			case "$def_version_ext" in
 				'/skip')
@@ -1486,20 +1485,27 @@ function bashctl__select_version {
 # --------------------------------------------------
 
 # type: direct
-# signature: bashctl__create cur_dir def_path def_name [template [template_copier]]
+# signature: bashctl__create cur_components_dir component def_path def_name
+#                            [template [template_options [template_copier]]]
 # return:
 #   -1 if given arguments are invalid.
 #   1 if creation fails
 function bashctl__create {
-	local cur_dir
+	local cur_components_dir
+	local component
 	local def_path
 	local def_name
+
 	local template
 	local template_options
 	local template_copier
 
-	bashctl__arg 'cur_dir' "$1" false && \
-		cur_dir="$1" && shift || \
+	bashctl__arg 'cur_components_dir' "$1" false && \
+		cur_components_dir="$1" && shift || \
+		return -1
+
+	bashctl__arg 'component' "$1" false && \
+		component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -1532,14 +1538,14 @@ function bashctl__create {
 	# returns, as it is no longer needed. 
 
 	(
-		. "$cur_dir/template-copiers/$template_copier/$template_copier.def.sh"
+		. "$cur_components_dir/bashctl/template-copiers/$template_copier/$template_copier.def.sh"
 		# FIXME [1]
-		template --create --template="$template" --root="$cur_dir" --path="$def_path" --name="$def_name" -- $template_options
+		template --create --template="$template" --root="$cur_components_dir" --component="$component" --path="$def_path" --name="$def_name" -- $template_options
 	)
 
 	if [ $? != 0 ]; then
 		bashctl__print_error true "creating new definition failed: template '%s', options '%s' -> '%s'" \
-			"$template" "$template_options" "$(bashctl__path_to_ref "$def_path" "$def_name")"
+			"$template" "$template_options" "[$component]$(bashctl__path_to_ref "$def_path" "$def_name")"
 		bashctl__print_warning true "... skipping what has not been done ..."
 
 		return 1
@@ -1552,20 +1558,27 @@ function bashctl__create {
 # --------------------------------------------------
 
 # type: direct
-# signature: bashctl__delete cur_dir def_path def_name [template [template_copier]]
+# signature: bashctl__delete cur_components_dir component def_path def_name
+#                            [template [template_options [template_copier]]]
 # return:
 #   -1 if given arguments are invalid.
 #   1 if deletion fails
 function bashctl__delete {
-	local cur_dir
+	local cur_components_dir
+	local component
 	local def_path
 	local def_name
+
 	local template
 	local template_options
 	local template_copier
 
-	bashctl__arg 'cur_dir' "$1" false && \
-		cur_dir="$1" && shift || \
+	bashctl__arg 'cur_components_dir' "$1" false && \
+		cur_components_dir="$1" && shift || \
+		return -1
+
+	bashctl__arg 'component' "$1" false && \
+		component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -1599,14 +1612,14 @@ function bashctl__delete {
 	# returns, as it is no longer needed.
 
 	(
-		. "$cur_dir/template-copiers/$template_copier/$template_copier.def.sh"
+		. "$cur_components_dir/bashctl/template-copiers/$template_copier/$template_copier.def.sh"
 		# FIXME [1]
-		template --delete --template="$template" --root="$cur_dir" --path="$def_path" --name="$def_name" -- $template_options
+		template --delete --template="$template" --root="$cur_components_dir" --component="$component" --path="$def_path" --name="$def_name" -- $template_options
 	)
 
 	if [ $? != 0 ]; then
 		bashctl__print_error true "deleting definition failed: '%s' (reference template '%s', options '%s')" \
-			"$(bashctl__path_to_ref "$def_path" "$def_name")" "$template" "$template_options"
+			"[$component]$(bashctl__path_to_ref "$def_path" "$def_name")" "$template" "$template_options"
 		bashctl__print_warning true "... skipping what has not been done ..."
 
 		return 1
@@ -2198,19 +2211,26 @@ function bashctl__edit {
 # --------------------------------------------------
 
 # type: direct
-# signature: bashctl__create cur_dir def_path def_name def_version_ext [new_version]
+# signature: bashctl__create_version cur_components_dir component def_path def_name
+#                                    def_version_ext new_version
 # return:
 #   -1 if given arguments are invalid.
-#   1 if creation fails (eg. template copying, template variable substitution, etc.)
+#   1 if creation fails
 function bashctl__create_version {
-	local cur_dir
+	local cur_components_dir
+	local component
 	local def_path
 	local def_name
+
 	local def_version_ext
 	local new_version
 
-	bashctl__arg 'cur_dir' "$1" false && \
-		cur_dir="$1" && shift || \
+	bashctl__arg 'cur_components_dir' "$1" false && \
+		cur_components_dir="$1" && shift || \
+		return -1
+
+	bashctl__arg 'component' "$1" false && \
+		component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -2219,44 +2239,53 @@ function bashctl__create_version {
 		def_name="$1" && shift || \
 		return -1
 
-	def_version_ext="$1" && shift
+	bashctl__arg 'def_version_ext' "$1" false && \
+		def_version_ext="$1" && shift || \
+		return -1
 
-	bashctl__arg 'new_version' "$1" true && \
+	bashctl__arg 'new_version' "$1" false && \
 		new_version="$1" && shift || \
-		new_version="$bashctl__default_new_version"
+		return -1
 
 	local new_version_ext="$(printf '%s' "$new_version" | tr '/' '.')"
-	local def_abspath="$cur_dir/$def_path/$def_name"
+	local def_abspath="$cur_components_dir/$component/$def_path/$def_name"
 
 	bashctl__print_debug true 3 "copy('%s' -> '%s')\n" \
 		"$def_abspath.$def_version_ext" "$def_abspath.$new_version_ext"
 	cp "$def_abspath.$def_version_ext" "$def_abspath.$new_version_ext"
 
 	if [ $? != 0 ]; then
-		bashctl__print_error true "creating new definition version failed: base version '%s' -> '%s'" \
-			"$new_version" "$(bashctl__path_to_ref "$def_path" "$def_name")"
+		bashctl__print_error true "creating new definition version failed: '%s' -> '%s'" \
+			"$(bashctl__path_to_ref "$def_path" "$def_name").$def_version_ext" \
+			"$(bashctl__path_to_ref "$def_path" "$def_name").$new_version"
 		return 1
 	fi
 
 	return 0
 }
 
-# Remove Action
+# Delete-Version Action
 # --------------------------------------------------
 
 # type: direct
-# signature: bashctl__remove cur_dir def_path def_name def_version_ext
+# signature: bashctl__delete_version cur_components_dir component def_path def_name
+#                                    def_version_ext new_version
 # return:
 #   -1 if given arguments are invalid.
-#   1 if creation fails (eg. template copying, template variable substitution, etc.)
-function bashctl__remove {
-	local cur_dir
+#   1 if deletion fails
+function bashctl__delete_version {
+	local cur_components_dir
+	local component
 	local def_path
 	local def_name
 	local def_version_ext
 
-	bashctl__arg 'cur_dir' "$1" false && \
-		cur_dir="$1" && shift || \
+	bashctl__arg 'cur_components_dir' "$1" false && \
+		cur_components_dir="$1" && shift || \
+		return -1
+
+	bashctl__arg 'component' "$1" false && \
+		component="$1" && shift || \
 		return -1
 
 	def_path="$1" && shift
@@ -2265,9 +2294,11 @@ function bashctl__remove {
 		def_name="$1" && shift || \
 		return -1
 
-	def_version_ext="$1" && shift
+	bashctl__arg 'def_version_ext' "$1" false && \
+		def_version_ext="$1" && shift || \
+		return -1
 
-	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_components_dir/$component/$def_path/$def_name.$def_version_ext"
 
 	# Remove the file
 	bashctl__print_debug true 3 "rm('%s')\n" "$def_version_abspath"
@@ -2276,7 +2307,7 @@ function bashctl__remove {
 	# Check if it worked
 	if [ $? != 0 ]; then
 		bashctl__print_error true "removing file failed: '%s'" \
-			"$(bashctl__path_to_ref "$def_path" "$def_name")"
+			"$(bashctl__path_to_ref "$def_path" "$def_name").$def_version_ext"
 		return 1
 	fi
 
@@ -2336,6 +2367,7 @@ function bashctl__ {
 
 	# Special vars
 	local bashctl_set_active_status=''
+	local bashctl_update_symlinks=false
 
 	# Used in various places.
 	local global_control='reset'
@@ -2375,6 +2407,15 @@ function bashctl__ {
 				fi
 				;;
 
+			'--update-symlinks')
+				if [ "$set_op" = false ]; then
+					bashctl_update_symlinks=true
+				elif [ "$set_op" = true ]; then
+					bashctl__print_error true ""
+					return -1
+				fi
+				;;
+
 			'--activate')
 				if [ "$set_op" = false ]; then
 					bashctl_set_active_status='activate'
@@ -2404,21 +2445,29 @@ function bashctl__ {
 	# A lockfile to deactivate most of bashctl (not including special options/actions)
 	# This persists over sessions.
 	if [ "$bashctl_set_active_status" = 'activate' ]; then
-		if [ -e "$BASH_LIB_ROOT/.inactive" ]; then
-			rm "$BASH_LIB_ROOT/.inactive"
+		if [ -e "$BASH_LIB_COMPONENT_ROOT/.inactive" ]; then
+			rm "$BASH_LIB_COMPONENT_ROOT/.inactive"
 		else
 			bashctl__print 'normal' false '%s\n' 'already active'
 		fi
 	elif [ "$bashctl_set_active_status" = 'deactivate' ]; then
-		if [ -e "$BASH_LIB_ROOT/.inactive" ]; then
+		if [ -e "$BASH_LIB_COMPONENT_ROOT/.inactive" ]; then
 			bashctl__print 'normal' false '%s\n' 'already inactive'
 		else
-			touch "$BASH_LIB_ROOT/.inactive"
+			touch "$BASH_LIB_COMPONENT_ROOT/.inactive"
 		fi
 	fi
 
-	if [ -e "$BASH_LIB_ROOT/.inactive" ]; then
+	if [ -e "$BASH_LIB_COMPONENT_ROOT/.inactive" ]; then
 		return 2
+	fi
+
+	if [ "$bashctl_update_symlinks" = true ]; then
+		(
+			. "$BASH_LIB_COMPONENT_ROOT/bashctl/bashctl-utils/update-symlinks.def.sh"
+			update_symlinks
+		)
+		return 0
 	fi
 
 	bashctl__store_globals "$global_control"
@@ -2467,7 +2516,7 @@ function bashctl__ {
 							;;
 
 						*)
-							# Defined in "$BASH_LIB_ROOT"/bashctl/bashctl.def.sh
+							# Defined in "$BASH_LIB_COMPONENT_ROOT"/bashctl/bashctl/bashctl.def.sh
 							bashctl__print_error true "value of option '%s' is invalid: '%s'" "$option" "$value"
 							bashctl__restore_globals "$global_control"; return -1
 							;;
@@ -2559,7 +2608,7 @@ function bashctl__ {
 					create_version_new_version="$value"
 				fi
 				;;
-			'-rm' | '--remove') action='remove';;
+			'-dv' | '--delete-version') action='delete-version';;
 
 			*)
 				bashctl__set_global_option "$option" "$set_op" "$value"
@@ -2616,9 +2665,28 @@ function bashctl__ {
 	local def_path
 	local def_name
 
+	local component_ref
+	local component
+
 	case "$action" in
 		'create' | 'delete')
-			for ref in "$@"; do
+			for component_ref in "$@"; do
+				case "$component_ref" in
+					\[*\]*)
+						component="$(printf '%s' "$component_ref" | tail -c +2 | rev | cut -d ']' -f 2- | rev)"
+
+						case "$component_ref" in
+							*:*) ref="$(printf '%s' "$component_ref" | cut -d ']' -f 2-)";;
+							*) ref='';;
+						esac
+						;;
+
+					*)
+						bashctl__print_error true "component must be given: '%s'" "$component_ref" >&2
+						bashctl__restore_globals "$global_control"; return 0
+						;;
+				esac
+
 				# vs. with 'split-join' (the 'case' is only needed with 'cut'):
 				#   def_path="$(split-join ':' ':-1' "$ref" | tr ':' '/')"
 				#   def_name="$(split-join ':' '-1:' "$ref" >&1)"
@@ -2632,9 +2700,9 @@ function bashctl__ {
 					# TODO: These also take two optional arguments ('template_options' and 'template_copier') -
 					#       how, if at all, should these be given?
 					'create')
-						bashctl__create "$BASH_LIB_ROOT" "$def_path" "$def_name" "$create_template";;
+						bashctl__create "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$create_template";;
 					'delete')
-						bashctl__delete "$BASH_LIB_ROOT" "$def_path" "$def_name" "$delete_template";;
+						bashctl__delete "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$delete_template";;
 				esac
 			done
 
@@ -2647,16 +2715,44 @@ function bashctl__ {
 	# ====================================================================================================
 
 	# Full list of definitions matched against all reference groups/defs.
-	local full_def_list=''
+	local def_list=''
 
-	for ref in "$@"; do
-		full_def_list="$(bashctl__append "$full_def_list" "$(bashctl__resolve_reference "$BASH_LIB_ROOT" "$ref")")"
-	done
+	case "$action" in
+		'create-version' | 'delete-version')
+			for component_ref in "$@"; do
+				case "$component_ref" in
+					\[*\]*)
+						component="$(printf '%s' "$component_ref" | tail -c +2 | rev | cut -d ']' -f 2- | rev)"
 
-	full_def_list="$(printf '%s' "$full_def_list" | sort | uniq)"
+						case "$component_ref" in
+							*:*) ref="$(printf '%s' "$component_ref" | cut -d ']' -f 2-)";;
+							*) ref='';;
+						esac
+						;;
+
+					*)
+						bashctl__print_error true "component must be given: '%s'" "$component_ref" >&2
+						bashctl__restore_globals "$global_control"; return 0
+						;;
+				esac
+
+				# Sets $def_list to the real set of files in the bash components library.
+				def_list="$(bashctl__append "$def_list" "$component/$(bashctl__resolve_reference "$BASH_LIB_ROOT" "$ref")")"
+			done
+			;;
+
+		*)
+			for ref in "$@"; do
+				# Sets $def_list to the symlinked set of files in the bash library.
+				def_list="$(bashctl__append "$def_list" "$(bashctl__resolve_reference "$BASH_LIB_ROOT" "$ref")")"
+			done
+			;;
+	esac
+
+	def_list="$(printf '%s' "$def_list" | sort | uniq)"
 
 	if [ "$bashctl__debug_matches" = true -o "$bashctl__debug" -gt 1 ]; then
-		bashctl__print_debug "defs('%s')\n" "$full_def_list"
+		bashctl__print_debug true 1 "defs('%s')\n" "$def_list"
 	fi
 	if [ "$bashctl__debug_matches" = true ]; then
 		# DEBUG: Exit before actually performing any actions on the matches.
@@ -2664,7 +2760,7 @@ function bashctl__ {
 	fi
 
 	# If there is nothing to perform actions on, then don't.
-	if [ -z "$full_def_list" ]; then
+	if [ -z "$def_list" ]; then
 		bashctl__restore_globals "$global_control"; return 0
 	fi
 
@@ -2692,6 +2788,18 @@ function bashctl__ {
 
 	local def
 	while read -r def; do
+		# These two actions require a component to be specified as well. This
+		# gets the component given, which was added to $def_list earlier
+		# (therefore it's now in $def).
+
+		case "$action" in
+			'create-version' | 'delete-version')
+				component="$(printf '%s' "$def" | cut -d '/' -f 1)"
+				def="$(printf '%s' "$def" | cut -d '/' -f 2-)"
+				bashctl__print_debug true 2 "component('%s')\n" "$component"
+				;;
+		esac
+
 		# vs. with 'split-join' (the 'case' is only needed with 'cut'):
 		#   def_path="$(split-join '/' ':-1' "$def" >&1)"
 		#   def_name="$(split-join '/' '-1:' "$def" >&1)"
@@ -2700,6 +2808,9 @@ function bashctl__ {
 			*) def_path='';;
 		esac
 		def_name="$(printf '%s' "$def" | rev | cut -d '/' -f 1 | rev)"
+
+		bashctl__print_debug true 2 "def_path('%s')\n" "$def_path"
+		bashctl__print_debug true 2 "def_name('%s')\n" "$def_name"
 
 		# Version-Independent Actions
 		# --------------------------------------------------
@@ -2724,6 +2835,8 @@ function bashctl__ {
 		# bashctl__select_version.
 		local version
 		version="$(bashctl__select_version "$BASH_LIB_ROOT" "$def_path" "$def_name")"
+
+		bashctl__print_debug true 2 "version('%s')\n" "$version"
 
 		# Skip due to:
 		#   - explicit input/bashctl__assume_version global
@@ -2754,14 +2867,13 @@ function bashctl__ {
 				bashctl__edit "$BASH_LIB_ROOT" "$def_path" "$def_name" "$version" "$edit_editor";;
 
 			'create-version')
-				bashctl__create_version "$BASH_LIB_ROOT" "$def_path" "$def_name" "$version" "$create_version_new_version";;
-			'remove')
-				bashctl__remove "$BASH_LIB_ROOT" "$def_path" "$def_name" "$version";;
+				bashctl__create_version "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$version" "$create_version_new_version";;
+			'delete-version')
+				bashctl__delete_version "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$version";;
 		esac
 	done <<EOF
-$full_def_list
+$def_list
 EOF
-
 
 	# Restore the attribute lists from before dynamically setting the 'def' attribute.
 	if [ "$global_control" != 'const' ]; then

@@ -49,6 +49,11 @@ function template__check_globals {
 		return 1
 	fi
 
+	if [ -z "$template__component" ]; then
+		template__error true '%s' "the '-comp' or '--component' option must be given"
+		return 1
+	fi
+
 	if [ -z "$template__path" ]; then
 		template__error true '%s' "the '-p' or '--path' option must be given"
 		return 1
@@ -210,12 +215,12 @@ function template__template_substitute {
 	local substitution_ret
 
 	# If the path doesn't exist, then FAIL.
-	printf "path('%s')\n" "$path" >&4
+	template__debug true 3 "path('%s')\n" "$path"
 	if [ ! -e "$path" ]; then return 1; fi
-	printf 'path:valid\n' >&4
+	template__debug true 3 'path:valid\n'
 
 	# Check if the path is a substitution script, or list of locations.
-	printf "head_val('%s')\n" "$(head -n 1 "$path")" >&4
+	template__debug true 3 "head_val('%s')\n" "$(head -n 1 "$path")"
 	if [ "$(head -n 1 "$path")" = '[list]' ]; then
 		# Interpret the given path as a list of suffixes to the substitution
 		# path, pointing to other possible locations of a substitution script,
@@ -233,7 +238,7 @@ function template__template_substitute {
 			[ $i -eq 0 ] && let i=$i+1 && continue
 
 			path_entry_full="$(dirname "$path")/$path_entry"
-			printf "path_entry_full('%s')\n" "$path_entry_full" >&4
+			template__debug true 3 "path_entry_full('%s')\n" "$path_entry_full"
 
 			# If this listed path doesn't exist, then try the next.
 			if [ ! -e "$path_entry_full" ]; then continue; fi
@@ -258,7 +263,7 @@ function template__template_substitute {
 	else
 		# Interpret the given path as a substitution script.
 
-		printf 'path:substitution-script\n' >&4
+		template__debug true 3 'path:substitution-script\n'
 
 		substitution="$(
 			. "$path"
@@ -280,7 +285,7 @@ function template__template_substitute {
 		if [ "$substitution_ret" != 0 ]; then return 1; fi
 	fi
 
-	printf "substitution('%s')\n" "$substitution" >&4
+	template__debug true 3 "substitution('%s')\n" "$substitution"
 	printf '%s' "$substitution"
 	return 0
 }
@@ -345,10 +350,10 @@ function template__substitute_str {
 				substitution=$template__name;;
 
 			*)
-				template_path="$template__root/templates/$template__template"
+				template_path="$template__root/bashctl/templates/$template__template"
 
-				printf "template_path('%s')\n" "$template_path" >&4
-				printf "sub_name('%s')\n" "$sub_name" >&4
+				template__debug true 3 "template_path('%s')\n" "$template_path"
+				template__debug true 3 "sub_name('%s')\n" "$sub_name"
 
 				# First, try the template's own substitution script.
 				template_substitution="$(template__template_substitute "$template_path/substitute-identifier.def.sh" "$sub_name" '' "$@" >&1)"
@@ -412,8 +417,8 @@ function template__substitute_str {
 					*)
 						template_path="$template__root/templates/$template__template"
 
-						printf "template_path('%s')\n" "$template_path" >&4
-						printf "sub_mod('%s')\n" "$sub_mod" >&4
+						template__debug true 3 "template_path('%s')\n" "$template_path"
+						template__debug true 3 "sub_mod('%s')\n" "$sub_mod"
 
 						# First, try the template's own substitution modification script.
 						template_substitution="$(template__template_substitute "$template_path/substitute-modifier.def.sh" "$sub_mod" "$substitution" "$@" >&1)"
@@ -506,6 +511,7 @@ function template {
 	# General vars
 	export template__template=''
 	export template__root=''
+	export template__component=''
 	export template__path=''
 	export template__name=''
 
@@ -588,6 +594,15 @@ function template {
 				fi
 				;;
 
+			'-comp' | '--component')
+				if [ "$set_op" = false ]; then
+					template__error true "'-comp' or '--component' must have an assignment after it."
+					return 1
+				elif [ "$set_op" = true ]; then
+					template__component="$value"
+				fi
+				;;
+
 			'-p' | '--path')
 				if [ "$set_op" = false ]; then
 					template__error true "'-p' or '--path' must have an assignment after it."
@@ -633,7 +648,7 @@ function template {
 	if [[ $? != 0 ]]; then return 1; fi
 
 	# Get the full path to the given template and that path's length in chars.
-	local template_path="$template__root/templates/$template__template"
+	local template_path="$template__root/bashctl/templates/$template__template"
 	template_path="${template_path%/}"
 
 	# 'x' = padding, ie. start_char=len+1
@@ -652,7 +667,7 @@ function template {
 	# Find all files needed.
 	# Note: '-L' = dereference symlinks
 	# Note: dirs is meant to include the template directory itself.
-	# Note: files must exclude the files 'substitute-identifier.def.sh' and
+	# Note: this must exclude the files 'substitute-identifier.def.sh' and
 	#       'substitute-modifier.def.sh' in the root of the template, because
 	#       these are special files to template__substitute_str.
 	local template_dirs="$(find -L "$template_path" -type d)"
@@ -687,7 +702,7 @@ function template {
 		# Determine the new path to copy to (create action), or the path to delete (delete action).
 		local template_item_path_suffix="$(printf '%s' "$template_item_path" | tail -c +$template_path_len)"
 		local new_item_path_suffix="$(template__substitute_str "$template_item_path_suffix" "$@" 1>&1)"
-		local new_item_path="$template__root/$template__path/$new_item_path_suffix"
+		local new_item_path="$template__root/$template__component/$template__path/$new_item_path_suffix"
 
 		template__debug true 2 "template_item_path_suffix('%s')\n" "$template_item_path_suffix"
 		template__debug true 2 "new_item_path_suffix('%s')\n" "$new_item_path_suffix"
