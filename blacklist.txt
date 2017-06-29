@@ -4,3 +4,4 @@ templates-old(/.*)?
 LICENSE
 README.md
 TEMPLATES.md
+DOCUMENTATION.md
