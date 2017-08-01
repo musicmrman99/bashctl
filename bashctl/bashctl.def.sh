@@ -469,10 +469,6 @@ function bashctl__set_global_option {
 				return -2
 			elif [ "$set_op" = true ]; then
 				bashctl__default_editor="$value"
-				if ! type "$bashctl__default_editor" > /dev/null; then
-					bashctl__print_error true "value of option '%s' is invalid (no such command): '%s'" "$option" "$bashctl__default_editor"
-					return -2
-				fi
 			fi
 			;;
 
