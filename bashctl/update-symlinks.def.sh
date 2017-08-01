@@ -104,8 +104,10 @@ cut -c $(printf '%s' "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/x" | wc -c)-)"
 			fi
 
 			# Create the directory as a real directory (not a symlink).
-			bashctl__print_debug true 2 "mkdir('%s')\n" "$BASH_LIB_ROOT/$dir_suffix"
-			mkdir "$BASH_LIB_ROOT/$dir_suffix"
+			if [ ! -d "$BASH_LIB_ROOT/$dir_suffix" ]; then
+				bashctl__print_debug true 2 "mkdir('%s')\n" "$BASH_LIB_ROOT/$dir_suffix"
+				mkdir "$BASH_LIB_ROOT/$dir_suffix"
+			fi
 		done
 
 		for file_suffix in $files_suffix; do
