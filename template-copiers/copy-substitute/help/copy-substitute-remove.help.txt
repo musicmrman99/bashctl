@@ -9,4 +9,3 @@ Description:
 
     First, determine which file the 'create' action would have created, given
     these parameters, then delete all of those files.
-

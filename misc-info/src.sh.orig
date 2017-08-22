@@ -22,4 +22,3 @@ for def_type in $(find "$BASHRC_USER_PREFIX" -mindepth 1 -maxdepth 1 -type d); d
 		. "$def_file"
 	done
 done
-

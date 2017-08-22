@@ -698,7 +698,7 @@ function bashctl__match {
 
 	# Pattern Format:
 	#   [-][/]<extended-regex>[/][;...]
-	# 
+	#
 	#   - if the first character is '-', then invert the match
 	#   - if the rest is of the form '/<extended-regex>/', then match
 	#     <extended-regex> against what has already been matched.
@@ -1140,7 +1140,7 @@ function bashctl__create {
 	# alias, function, etc. already defined in this shell named 'template', the
 	# one from this file does not overwrite it. This also makes sure the definition
 	# of the `template` function from the template is forgotten once the subshell
-	# returns, as it is no longer needed. 
+	# returns, as it is no longer needed.
 
 	(
 		. "$cur_components_dir/$bashctl_component/template-copiers/$template_copier/$template_copier.def.sh"
@@ -2562,4 +2562,3 @@ function const-run {
 	const-bashctl --run "$@"
 	return $?
 }
-

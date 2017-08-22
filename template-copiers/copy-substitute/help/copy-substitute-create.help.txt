@@ -12,4 +12,3 @@ Description:
     for other strings. These string are listed in a seperate help file - see
     `template --help=substitutions` for the substitution format and a list of
     currently interpreted strings.
-
