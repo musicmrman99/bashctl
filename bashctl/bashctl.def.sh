@@ -900,7 +900,7 @@ function bashctl__get_def_versions {
 		if [ -z "$def_version" ]; then
 			# '/' is a character that cannot appear in a valid file extension,
 			# therefore it can be checked for later.
-			def_version='/no extension'
+			def_version='/no-extension'
 		fi
 
 		constructed_def_versions="${constructed_def_versions}${constructed_def_versions+$'\n'}${def_version}"
@@ -1005,7 +1005,7 @@ function bashctl__select_version {
 
 		# If the given extension is '', then convert to no extension
 		if [ -z "$def_version_ext" ]; then
-			def_version_ext='/no extension'
+			def_version_ext='/no-extension'
 		fi
 
 		# TODO: Does it need to check for dots (the attribute-delimination character),
@@ -1019,13 +1019,13 @@ function bashctl__select_version {
 					return 65
 					;;
 
-				'/no extension')
+				'/no-extension')
 					def_version_abspath="$cur_dir/$def_path/$def_name"
 
 					# Check if file exists.
 					if [ ! -e "$def_version_abspath" ]; then
 						# ${param:+word} = substitute word if param set and not null
-						def_version_ext_notfound='/no extension./not found'
+						def_version_ext_notfound='/no-extension./not found'
 
 						bashctl__print_msg 'normal' false '%s\n' "$(bashctl__list_version "$def_path" "$def_name" "$def_version_ext_notfound" >&1)"
 						bashctl__print_msg 'normal' false '... skipping ...\n'
@@ -1269,7 +1269,7 @@ function bashctl__colorize_extension {
 				return 0;;
 
 			# Magenta: Special
-			'/no extension')
+			'/no-extension')
 				# For how this can be it's value, see 'bashctl__get_def_versions'.
 				bashctl__print 'magenta' false "no extension"
 				return 0;;
