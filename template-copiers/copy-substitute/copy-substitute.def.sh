@@ -779,4 +779,3 @@ function template {
 $template_items
 EOF
 }
-

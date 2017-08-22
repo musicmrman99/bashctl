@@ -4,4 +4,3 @@ Syntax:
 
 Description:
     A suite containing ...
-

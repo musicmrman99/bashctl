@@ -17,4 +17,3 @@ Actions:
     -r, --remove
         Delete an instance of the given template, at the given location, with
         the given name. See `template --help=delete` for details.
-

@@ -1,6 +1,5 @@
 [list]
 ../adv-function/substitute-modifier.def.sh
-../adv-function/substitute-modifier.txt   
+../adv-function/substitute-modifier.txt
 ../adv-function-help/substitute-modifier.def.sh
 ../adv-function-help/substitute-modifier.txt
-

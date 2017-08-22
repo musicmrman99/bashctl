@@ -386,4 +386,3 @@ function bashctl__print_debug {
 
 	return 0
 }
-

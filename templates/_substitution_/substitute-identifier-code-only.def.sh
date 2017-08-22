@@ -76,4 +76,3 @@ function substitute-identifier {
 
 	printf '%s' "$substitution"
 }
-

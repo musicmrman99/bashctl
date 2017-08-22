@@ -35,4 +35,3 @@ function <{name:funcsafe}> {
 		return 0
 	fi
 }
-

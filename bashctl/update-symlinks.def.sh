@@ -126,4 +126,3 @@ cut -c $(printf '%s' "$BASH_LIB_COMPONENT_ROOT/$top_dir_suffix/x" | wc -c)-)"
 	set +f
 	IFS="$IFS_backup"
 }
-

@@ -25,4 +25,3 @@ Recognized modifiers:
     bashctl-reference
         This translates all '/' characters into ':' characters. This may help in
         making the 'path' identifier safe for use as a bashctl reference.
-
