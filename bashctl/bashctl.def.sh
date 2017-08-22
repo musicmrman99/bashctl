@@ -2449,6 +2449,7 @@ function bashctl__ {
 		# bashctl__select_version.
 		local version
 		version="$(bashctl__select_version "$BASH_LIB_ROOT" "$def_path" "$def_name")"
+		local ret_val=$?
 
 		bashctl__print_debug true 2 "version('%s')\n" "$version"
 
@@ -2456,10 +2457,11 @@ function bashctl__ {
 		#   - explicit input OR bashctl__assume_version global
 		#   - debugging
 		#   - invalid input OR bashctl__assume_version global
-		case $? in
+		case $ret_val in
 			64 | 65 | 66)
 				continue;;
 		esac
+		unset ret_val
 
 		# Version-Dependent Actions
 		# --------------------------------------------------
