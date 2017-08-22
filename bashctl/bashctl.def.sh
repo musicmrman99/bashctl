@@ -1537,7 +1537,7 @@ function bashctl__check_attrs {
 }
 
 # type: direct
-# signature: bashctl__exec cur_dir def_path def_name def_version_ext (exec_type:'run'|'source')
+# signature: bashctl__exec cur_dir def_path def_name def_version_ext exec_type
 # return:
 #   -1 if given arguments are invalid.
 function bashctl__exec {
