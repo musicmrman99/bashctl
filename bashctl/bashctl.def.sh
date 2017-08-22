@@ -996,7 +996,7 @@ function bashctl__select_version {
 		# If we aren't assuming a particular version, then give the user the options and
 		# ask them which version to use.
 		if [ "$bashctl__assume_version" = '' ]; then
-			read -rp "Which version to act on (eg. 'def/sh', or '/skip')? " def_version_ext < /dev/tty
+			read -rp "Which version to act on (eg. 'def/sh', or '/no-extension' or '/skip')? " def_version_ext < /dev/tty
 
 		# If we are assuming a particular version, then just use that one.
 		else
