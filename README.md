@@ -25,7 +25,7 @@ Reasons why it's useful:
     - It's not a framework, controling every aspect of your bash experience - use it for what it's useful for on *your* system and with *your* workflow and no more - your software shouldn't control you
 
 - It's local.
-  - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow?
+  - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow or has data usage costs?
 
 ## Setup
 This is the way I would set up basctl, but change it to suit yourself ...
