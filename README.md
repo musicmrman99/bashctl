@@ -19,7 +19,10 @@ Because it's useful. It's not **awesome**, it doesn't reimagine how you use the 
 
 Reasons why it's useful:
 - It's simple
-  - Well, it's actually not that simple, but you don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit) on single files.
+  - Well, it's actually not that simple, but this point is still valid for a few reasons:
+    - You don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit)
+    - It's a lot simpler (on the outside) than some other tools if you only want the functionality bashctl provides and not a whole load of other features on top, or alongside
+    - It's not a framework, controling every aspect of your bash experience - use it for what it's useful for on *your* system and with *your* workflow and no more - your software shouldn't control you
 
 - It's local.
   - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow?
