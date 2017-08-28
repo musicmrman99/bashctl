@@ -3,13 +3,13 @@ bashctl is a small set of functions (the full list is available in the main help
 
 ## A little history
 ###### (skip this bit if you don't care and just want to use it)
-To be honest, I didn't even look for software or scripts for script/definition development and management before I wrote this. This was partially because at the time I didn't do much customization and because this project started out a lot smaller than it is now. [The very original version](https://github.com/musicmrman99/bashctl/blob/master/misc-info/src.sh.orig) was put straight into my `.bashrc`. Then it grew a bit and I put it in a separate script I sourced in my `.bashrc` called `ualias.sh` (for 'User-defined Aliases', ie. not the predefined ones in Ubuntu's default `.bashrc`), as it was originally only for organizing aliases, before I got onto writing more complex scripts and functions. I thought it would be quicker to write something myself just to source the aliases I used than to search for something that did the same, and originally it probably was. But then I started to get think 'oh, I need it to do *this* as well', 'ooh, and *this*', 'and *that*', ... Each time I wanted another feature, I kept thinking "well, it's just one more feature, it can't be that hard ...". And each individual feature wasn't too hard (sort of), only, they kept piling up.
+To be honest, I didn't even look for software or scripts for script/definition development and management before I wrote this. This was partially because at the time I didn't do much customization and because this project started out a lot smaller than it is now. [The very original version](https://github.com/musicmrman99/bashctl/blob/master/misc-info/src.sh.orig) was put straight into my `.bashrc`. Then it grew a bit and I put it in a separate script I sourced in my `.bashrc` called `ualias.sh` (for 'User-defined Aliases', ie. not the predefined ones in Ubuntu's default `.bashrc`), as it was originally only for organizing aliases, before I got onto writing more complex scripts and functions. I thought it would be quicker to write something myself just to source the aliases I used than to search for something that did the same, and originally it probably was. But then I started to think 'oh, I need it to do *this* as well', 'ooh, and *this*', 'and *that*', ... Each time I wanted another feature, I kept thinking "well, it's just one more feature, it can't be that hard ...". And each individual feature wasn't too hard (sort of), only, they kept piling up.
 
 Over time `ualias` changed to encompass functions and the name was changed to `src` (in fact, I kept that name for that part of `bashctl`). Then I added the ability to execute scripts as well as source them and the name changed to `bash-exec`. But `bash-exec` sounds a bit too similar to the `exec` system call, which doesn't work in the same way that `bash-exec` actually did. So, I changed its name one last time to `bashctl`, without modifying any code (the name is derived from `systemctl`, from systemd).
 
 Then, when I finally plucked up the courage to share my code on GitHub, I realised I had an irritation: `.git`. That folder and the other files that GitHub adds to a project, like `README.md` and `LICENSE`, looked messy in my Bash Library once I'd pulled the repo in, not to mention the fact that I could *theoretically* execute these files with `bashctl`. So, back to the editor for me ;) I invented a system whereby I could:
-1. hold the files for the library in subdirectories of a separate directory (`$BASH_LIB_COMPONENTS_ROOT`, for which I often use the folder `~/Bash Library - Components`), then
-2. symlink to these files in the main library (`$BASH_LIB_ROOT`, usually `~/Bash Library`), excluding any files I don't want to show through the use of a blacklist file (`blacklist.txt`).
+1. hold the files for the library in subdirectories of a separate directory (`$BASH_LIB_COMPONENT_ROOT`, for which I often use the folder `~/Bash Library - Components`), then
+2. symlink to these files in the main library (`$BASH_LIB_ROOT`, usually `~/Bash Library`), excluding any files I don't want to show through the use of a blacklist file (`blacklist.txt`) and/or whitelist file (`whitelist.txt`).
 
 As for the present, this little project may well gather dust and end up only being used by me, but there's no reason not to share ... just in case.
 
@@ -19,10 +19,13 @@ Because it's useful. It's not **awesome**, it doesn't reimagine how you use the 
 
 Reasons why it's useful:
 - It's simple
-  - Well, it's actually not that simple, but you don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit) on single files.
+  - Well, it's actually not that simple, but this point is still valid for a few reasons:
+    - You don't need to understand the complex parts (like templating, versioning and suites) to use the more basic actions (list, run, source, find and edit)
+    - It's a lot simpler (on the outside) than some other tools if you only want the functionality bashctl provides and not a whole load of other features on top, or alongside
+    - It's not a framework, controling every aspect of your bash experience - use it for what it's useful for on *your* system and with *your* workflow and no more - your software shouldn't control you
 
 - It's local.
-  - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow?
+  - I don't like relying on external resources, particularly not from the internet - what if I have no internet connection, or my connection is slow or has data usage costs?
 
 ## Setup
 This is the way I would set up basctl, but change it to suit yourself ...
