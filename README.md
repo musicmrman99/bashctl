@@ -8,7 +8,7 @@ To be honest, I didn't even look for software or scripts for script/definition d
 Over time `ualias` changed to encompass functions and the name was changed to `src` (in fact, I kept that name for that part of `bashctl`). Then I added the ability to execute scripts as well as source them and the name changed to `bash-exec`. But `bash-exec` sounds a bit too similar to the `exec` system call, which doesn't work in the same way that `bash-exec` actually did. So, I changed its name one last time to `bashctl`, without modifying any code (the name is derived from `systemctl`, from systemd).
 
 Then, when I finally plucked up the courage to share my code on GitHub, I realised I had an irritation: `.git`. That folder and the other files that GitHub adds to a project, like `README.md` and `LICENSE`, looked messy in my Bash Library once I'd pulled the repo in, not to mention the fact that I could *theoretically* execute these files with `bashctl`. So, back to the editor for me ;) I invented a system whereby I could:
-1. hold the files for the library in subdirectories of a separate directory (`$BASH_LIB_COMPONENTS_ROOT`, for which I often use the folder `~/Bash Library - Components`), then
+1. hold the files for the library in subdirectories of a separate directory (`$BASH_LIB_COMPONENT_ROOT`, for which I often use the folder `~/Bash Library - Components`), then
 2. symlink to these files in the main library (`$BASH_LIB_ROOT`, usually `~/Bash Library`), excluding any files I don't want to show through the use of a blacklist file (`blacklist.txt`).
 
 As for the present, this little project may well gather dust and end up only being used by me, but there's no reason not to share ... just in case.
