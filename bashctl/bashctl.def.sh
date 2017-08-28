@@ -1884,7 +1884,7 @@ function bashctl__create_version {
 
 # type: direct
 # signature: bashctl__delete_version cur_components_dir component def_path def_name
-#                                    def_version_ext new_version
+#                                    def_version_ext
 # return:
 #   -1 if given arguments are invalid.
 #   1 if deletion fails
