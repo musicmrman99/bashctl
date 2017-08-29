@@ -1315,7 +1315,7 @@ function bashctl__colorize_extension {
 # return:
 #   -1 if given arguments are invalid.
 function bashctl__convert_version_extension {
-	local version_extension
+	local def_version_extension
 
 	bashctl__arg 'def_version_extension' "$1" false && \
 		def_version_extension="$1" && shift || \
@@ -1691,7 +1691,7 @@ function bashctl__enable {
 
 	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
 
-	output="$(rename "s/\$/\.$attr/" "$def_version_abspath")"
+	local output="$(rename "s/\$/\.$attr/" "$def_version_abspath")"
 	if [ "$output" != '' ]; then
 		bashctl__print_error true "could not rename '%s' (version: '%s')\n  rename output: '%s'" "$(bashctl__path_to_ref "$def_path" "$def_name")" "$def_version_ext" "$output"
 	fi
@@ -1728,7 +1728,7 @@ function bashctl__disable {
 
 	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
 
-	output="$(rename "s/\.$attr//" "$def_version_abspath")"
+	local output="$(rename "s/\.$attr//" "$def_version_abspath")"
 	if [ "$output" != '' ]; then
 		bashctl__print_error true "could not rename '%s' (version: '%s')\n  rename output: '%s'" "$(bashctl__path_to_ref "$def_path" "$def_name")" "$def_version_ext" "$output"
 	fi
@@ -1793,7 +1793,7 @@ function bashctl__edit {
 	local def_path
 	local def_name
 	local def_version_ext
-	local attr
+	local editor
 
 	bashctl__arg 'cur_dir' "$1" false && \
 		cur_dir="$1" && shift || \
