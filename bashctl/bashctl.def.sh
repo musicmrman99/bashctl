@@ -900,7 +900,7 @@ function bashctl__get_def_versions {
 		if [ -z "$def_version" ]; then
 			# '/' is a character that cannot appear in a valid file extension,
 			# therefore it can be checked for later.
-			def_version='/no extension'
+			def_version='/no-extension'
 		fi
 
 		constructed_def_versions="${constructed_def_versions}${constructed_def_versions+$'\n'}${def_version}"
@@ -984,8 +984,7 @@ function bashctl__select_version {
 	# Single version.
 	# *0* lines as there is no newline ('\n') character at the end of the variable.
 	if [ "$def_versions_lines" -eq 0 ]; then
-		def_version_ext="$def_versions_exts"
-		def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+		def_version_ext=".$def_versions_exts"
 
 	# Multiple versions.
 	else
@@ -996,16 +995,13 @@ function bashctl__select_version {
 		# If we aren't assuming a particular version, then give the user the options and
 		# ask them which version to use.
 		if [ "$bashctl__assume_version" = '' ]; then
-			read -rp "Which version to act on (eg. 'def/sh', or '/skip')? " def_version_ext < /dev/tty
+			while [ "$def_version_ext" = '' ]; do
+				read -rp "Which version to act on (eg. 'def/sh', or '/no-extension' or '/skip')? " def_version_ext < /dev/tty
+			done
 
 		# If we are assuming a particular version, then just use that one.
 		else
 			def_version_ext="$bashctl__assume_version"
-		fi
-
-		# If the given extension is '', then convert to no extension
-		if [ -z "$def_version_ext" ]; then
-			def_version_ext='/no extension'
 		fi
 
 		# TODO: Does it need to check for dots (the attribute-delimination character),
@@ -1019,18 +1015,8 @@ function bashctl__select_version {
 					return 65
 					;;
 
-				'/no extension')
-					def_version_abspath="$cur_dir/$def_path/$def_name"
-
-					# Check if file exists.
-					if [ ! -e "$def_version_abspath" ]; then
-						# ${param:+word} = substitute word if param set and not null
-						def_version_ext_notfound='/no extension./not found'
-
-						bashctl__print_msg 'normal' false '%s\n' "$(bashctl__list_version "$def_path" "$def_name" "$def_version_ext_notfound" >&1)"
-						bashctl__print_msg 'normal' false '... skipping ...\n'
-						return 66
-					fi
+				'/no-extension')
+					def_version_ext=''
 					;;
 
 				*)
@@ -1039,25 +1025,25 @@ function bashctl__select_version {
 					;;
 			esac
 
-		# This is a valid extension, not a built-in.
+		# This is a 'real' extension, not a built-in.
 		else
-			# Convert from the form 'def/sh' to 'def.sh'.
-			def_version_ext="$(printf '%s' "$def_version_ext" | tr '/' '.')"
-			def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+			# Convert from the form 'def/sh' to '.def.sh'.
+			def_version_ext=".$(printf '%s' "$def_version_ext" | tr '/' '.')"
+		fi
 
-			# Check if file exists.
-			if [ ! -e "$def_version_abspath" ]; then
-				# ${param:+word} = substitute word if param set and not null
-				def_version_ext_notfound="${def_version_ext}${def_version_ext:+.}/not found"
+		# Check if file exists.
+		def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
+		if [ ! -e "$def_version_abspath" ]; then
+			# ${param:+word} = substitute word if param set and not null
+			def_version_ext_notfound='/no-extension./not-found'
 
-				bashctl__print_msg 'normal' false '%s\n' "$(bashctl__list_version "$def_path" "$def_name" "$def_version_ext_notfound")"
-				bashctl__print_msg 'normal' false '... skipping ...\n'
-				return 66
-			fi
+			bashctl__print_msg 'normal' false '%s\n' "$(bashctl__list_version "$def_path" "$def_name" "$def_version_ext_notfound")"
+			bashctl__print_msg 'normal' false '... skipping ...\n'
+			return 66
 		fi
 
 		# Print a message stating the use of a particular version.
-		bashctl__print_debug "using version '%s' of definition '%s'\n" "$def_version_ext" "$(bashctl__path_to_ref "$def_path" "$def_name")"
+		bashctl__print_debug "using version '%s' of definition '%s'\n" "$def_version_ext" "$(bashctl__path_to_ref "$def_path" "$def_name" >&1)"
 	fi
 
 	if [ "$bashctl__debug_version_selection" = true -o "$bashctl__debug" -gt 1 ]; then
@@ -1262,16 +1248,16 @@ function bashctl__colorize_extension {
 	if [ "$(printf '%s' "$ext" | head -c 1)" = '/' ]; then
 		case "$ext" in
 			# Black: Not found
-			'/not found')
+			'/not-found')
 				# This is a kind of error (technically recoverable, though),
 				# so put it in bold.
-				bashctl__print 'black' true "not found"
+				bashctl__print 'black' true "not-found"
 				return 0;;
 
 			# Magenta: Special
-			'/no extension')
+			'/no-extension')
 				# For how this can be it's value, see 'bashctl__get_def_versions'.
-				bashctl__print 'magenta' false "no extension"
+				bashctl__print 'magenta' false "no-extension"
 				return 0;;
 
 			# Invalid built-in
@@ -1322,6 +1308,10 @@ function bashctl__convert_version_extension {
 		return -1
 
 	local append_slash=false
+
+	if [ "$(printf "$def_version_extension" | head -c 1)" = '.' ]; then
+		def_version_extension="$(printf "$def_version_extension" | tail -c +2)"
+	fi
 
 	IFS__backup="$IFS"
 	IFS='.'
@@ -1394,7 +1384,7 @@ function bashctl__list {
 
 	local def_versions_extensions="$(bashctl__get_def_versions "$cur_dir/$def_path" "$def_name")"
 	if [ -z "$def_versions_extensions" ]; then
-		bashctl__list_version "$def_path" "$def_name" "/not found"
+		bashctl__list_version "$def_path" "$def_name" "/not-found"
 		return 0
 	fi
 
@@ -1427,13 +1417,9 @@ function bashctl__match_attrs {
 		invert_match=true && shift || \
 		invert_match=false
 
-	bashctl__arg 'attrs' "$1" false && \
-		attrs="$1" && shift || \
-		return -1
+	attrs="$1" && shift
 
-	bashctl__arg 'against_attrs' "$1" false && \
-		against_attrs="$1" && shift || \
-		return -1
+	against_attrs="$1" && shift
 
 	local matched_attrs=''
 	local has_matched=1
@@ -1485,9 +1471,7 @@ function bashctl__match_attrs {
 function bashctl__check_attrs {
 	local attrs
 
-	bashctl__arg 'attrs' "$1" false && \
-		attrs="$1" && shift || \
-		return -1
+	attrs="$1" && shift
 
 	local fail_attrs
 	local missing_required_attrs
@@ -1500,6 +1484,8 @@ function bashctl__check_attrs {
 	if [ "$bashctl__fail_unrecognized" = true ]; then
 	  check_fail_attrs="$check_fail_attrs/unrecognized(*)"
 	fi
+
+	local check_missing_required_attrs="$bashctl__required_attrs"
 
 	# Check against blacklist
 	# --------------------
@@ -1518,8 +1504,6 @@ function bashctl__check_attrs {
 
 	# Check against whitelist
 	# --------------------
-	local check_missing_required_attrs="$bashctl__required_attrs"
-
 	missing_required_attrs="$(bashctl__match_attrs not "$attrs" "$check_missing_required_attrs")"
 	has_missing_required_attrs="$(bashctl__bool $?)"
 
@@ -1569,11 +1553,15 @@ function bashctl__exec {
 	local related_attrs
 	local good_exec
 
-	local tmp_backup__color
-	tmp_backup__color="$bashctl__color"
-	bashctl__color='raw'
-	attrs="$(bashctl__convert_version_extension "$def_version_ext")"
-	bashctl__color="$tmp_backup__color"
+	if [ -z "$def_version_ext" ]; then
+		attrs=''
+	else
+		local tmp_backup__color
+		tmp_backup__color="$bashctl__color"
+		bashctl__color='raw'
+		attrs="$(bashctl__convert_version_extension "$def_version_ext")"
+		bashctl__color="$tmp_backup__color"
+	fi
 
 	output="$(bashctl__check_attrs "$attrs")"
 	good_exec="$(bashctl__bool $?)"
@@ -1632,7 +1620,7 @@ function bashctl__exec {
 			bashctl__print_debug '\n'
 		fi
 
-		local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+		local def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
 		if [ "$exec_type" = 'run' ]; then
 			bash "$def_version_abspath"
 		elif [ "$exec_type" = 'source' ]; then
@@ -1689,7 +1677,7 @@ function bashctl__enable {
 		attr="$1" && shift || \
 		return -1
 
-	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
 
 	local output="$(rename "s/\$/\.$attr/" "$def_version_abspath")"
 	if [ "$output" != '' ]; then
@@ -1726,7 +1714,7 @@ function bashctl__disable {
 		attr="$1" && shift || \
 		return -1
 
-	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
 
 	local output="$(rename "s/\.$attr//" "$def_version_abspath")"
 	if [ "$output" != '' ]; then
@@ -1766,7 +1754,7 @@ function bashctl__find {
 		regex="$1" && shift || \
 		return -1
 
-	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
 
 	# This will strip grep's coloring, which is annoying, but not super-bad.
 	local results="$(grep "$regex" "$def_version_abspath")"
@@ -1811,7 +1799,7 @@ function bashctl__edit {
 		editor="$1" && shift || \
 		editor="$bashctl__default_editor"
 
-	local def_version_abspath="$cur_dir/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_dir/$def_path/${def_name}${def_version_ext}"
 
 	# bashctl__edit is called in the context of redirected input (a while
 	# loop with read), so make sure it's getting input from the right source
@@ -1827,7 +1815,7 @@ function bashctl__edit {
 
 # type: direct
 # signature: bashctl__create_version cur_components_dir component def_path def_name
-#                                    def_version_ext new_version
+#                                    def_version_ext new_version_ext
 # return:
 #   -1 if given arguments are invalid.
 #   1 if creation fails
@@ -1838,7 +1826,7 @@ function bashctl__create_version {
 	local def_name
 
 	local def_version_ext
-	local new_version
+	local new_version_ext
 
 	bashctl__arg 'cur_components_dir' "$1" false && \
 		cur_components_dir="$1" && shift || \
@@ -1854,25 +1842,18 @@ function bashctl__create_version {
 		def_name="$1" && shift || \
 		return -1
 
-	bashctl__arg 'def_version_ext' "$1" false && \
-		def_version_ext="$1" && shift || \
-		return -1
+	def_version_ext="$1" && shift
+	new_version_ext="$1" && shift
 
-	bashctl__arg 'new_version' "$1" false && \
-		new_version="$1" && shift || \
-		return -1
-
-	local new_version_ext="$(printf '%s' "$new_version" | tr '/' '.')"
 	local def_abspath="$cur_components_dir/$component/$def_path/$def_name"
-
 	bashctl__print_debug true 3 "copy('%s' -> '%s')\n" \
-		"$def_abspath.$def_version_ext" "$def_abspath.$new_version_ext"
-	cp "$def_abspath.$def_version_ext" "$def_abspath.$new_version_ext"
+		"${def_abspath}${def_version_ext}" "${def_abspath}${new_version_ext}"
+	cp "${def_abspath}${def_version_ext}" "${def_abspath}${new_version_ext}"
 
 	if [ $? != 0 ]; then
 		bashctl__print_error true "creating new definition version failed: '%s' -> '%s'" \
-			"$(bashctl__path_to_ref "$def_path" "$def_name").$def_version_ext" \
-			"$(bashctl__path_to_ref "$def_path" "$def_name").$new_version"
+			"$(bashctl__path_to_ref "$def_path" "$def_name")${def_version_ext}" \
+			"$(bashctl__path_to_ref "$def_path" "$def_name")${new_version_ext}"
 		return 1
 	fi
 
@@ -1909,11 +1890,9 @@ function bashctl__delete_version {
 		def_name="$1" && shift || \
 		return -1
 
-	bashctl__arg 'def_version_ext' "$1" false && \
-		def_version_ext="$1" && shift || \
-		return -1
+	def_version_ext="$1" && shift
 
-	local def_version_abspath="$cur_components_dir/$component/$def_path/$def_name.$def_version_ext"
+	local def_version_abspath="$cur_components_dir/$component/$def_path/${def_name}${def_version_ext}"
 
 	# Remove the file
 	bashctl__print_debug true 3 "rm('%s')\n" "$def_version_abspath"
@@ -1922,7 +1901,7 @@ function bashctl__delete_version {
 	# Check if it worked
 	if [ $? != 0 ]; then
 		bashctl__print_error true "removing file failed: '%s'" \
-			"$(bashctl__path_to_ref "$def_path" "$def_name").$def_version_ext"
+			"$(bashctl__path_to_ref "$def_path" "$def_name")${def_version_ext}"
 		return 1
 	fi
 
@@ -1932,8 +1911,8 @@ function bashctl__delete_version {
 	local abspath="$def_version_abspath"
 
 	# Keep going until we get to the root directory ...
-	while [ "$path" = '/' ]; do
-		path="$(dirname "$path")"
+	while [ "$abspath" != '/' ]; do
+		abspath="$(dirname "$abspath")"
 
 		if [ -z "$(find "$abspath")" ]; then
 			rm -r "$abspath"
@@ -2206,7 +2185,7 @@ function bashctl__ {
 					bashctl__print_debug "command('%s')" "$command"
 
 					if ! type "$command" > /dev/null; then
-						bashctl__print_error true "value of option '%s' is invalid (no such command): '%s'" "$option" "$command"
+						bashctl__print_error true "value of option '%s' is invalid (%s): '%s'" "$option" "no such command" "$command"
 						bashctl__restore_globals "$global_control"; return -1
 					fi
 				fi
@@ -2215,14 +2194,21 @@ function bashctl__ {
 			'-cv' | '--create-version')
 				action='create-version'
 				if [ "$set_op" = false ]; then
-					# This will be judged invalid by bashctl__arg and the default uesd instead.
-					create_version_new_version=''
+					bashctl__print_error true "'-cv' or '--create-version' must have an assignment after it."
+					bashctl__restore_globals "$global_control"; return -1
 				elif [ "$set_op" = true ]; then
 					# Validation that the used base version exists is done when something is created using it.
-					create_version_new_version="$value"
+					if [ "$value" = '' ]; then
+						bashctl__print_error true "value of option '%s' is invalid (%s)" "$option" "cannot be blank"
+						bashctl__restore_globals "$global_control"; return -1
+					else
+						create_version_new_version="$value"
+					fi
 				fi
 				;;
-			'-dv' | '--delete-version') action='delete-version';;
+			'-dv' | '--delete-version')
+				action='delete-version'
+				;;
 
 			*)
 				bashctl__set_global_option "$option" "$set_op" "$value"
@@ -2483,7 +2469,17 @@ function bashctl__ {
 				bashctl__edit "$BASH_LIB_ROOT" "$def_path" "$def_name" "$version" "$edit_editor";;
 
 			'create-version')
-				bashctl__create_version "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$version" "$create_version_new_version";;
+				case "$create_version_new_version" in
+					'/no-extension')
+						create_version_new_version=''
+						;;
+					*)
+						create_version_new_version=".$(printf '%s' "$create_version_new_version" | tr '/' '.')"
+						;;
+				esac
+
+				bashctl__create_version "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$version" "$create_version_new_version"
+				;;
 			'delete-version')
 				bashctl__delete_version "$BASH_LIB_COMPONENT_ROOT" "$component" "$def_path" "$def_name" "$version";;
 		esac
