@@ -995,7 +995,9 @@ function bashctl__select_version {
 		# If we aren't assuming a particular version, then give the user the options and
 		# ask them which version to use.
 		if [ "$bashctl__assume_version" = '' ]; then
-			read -rp "Which version to act on (eg. 'def/sh', or '/no-extension' or '/skip')? " def_version_ext < /dev/tty
+			while [ "$def_version_ext" = '' ]; do
+				read -rp "Which version to act on (eg. 'def/sh', or '/no-extension' or '/skip')? " def_version_ext < /dev/tty
+			done
 
 		# If we are assuming a particular version, then just use that one.
 		else
@@ -2183,7 +2185,7 @@ function bashctl__ {
 					bashctl__print_debug "command('%s')" "$command"
 
 					if ! type "$command" > /dev/null; then
-						bashctl__print_error true "value of option '%s' is invalid (no such command): '%s'" "$option" "$command"
+						bashctl__print_error true "value of option '%s' is invalid (%s): '%s'" "$option" "no such command" "$command"
 						bashctl__restore_globals "$global_control"; return -1
 					fi
 				fi
@@ -2196,7 +2198,12 @@ function bashctl__ {
 					bashctl__restore_globals "$global_control"; return -1
 				elif [ "$set_op" = true ]; then
 					# Validation that the used base version exists is done when something is created using it.
-					create_version_new_version="$value"
+					if [ "$value" = '' ]; then
+						bashctl__print_error true "value of option '%s' is invalid (%s)" "$option" "cannot be blank"
+						bashctl__restore_globals "$global_control"; return -1
+					else
+						create_version_new_version="$value"
+					fi
 				fi
 				;;
 			'-dv' | '--delete-version')
