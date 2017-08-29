@@ -2245,8 +2245,9 @@ function bashctl__ {
 
 	if [ "$action" = 'none' ]; then
 		# If someone just runs `bashctl`, this is a friendly message saying:
-		#   "Don't worry, you didn't just do something disastrous with no output saying what you just did."
+		#   "Don't worry, you didn't just do something disastrous with no output - I didn't do anything."
 		bashctl__print 'normal' false '%s\n' 'nothing to do, exiting ...'
+		bashctl__restore_globals "$global_control"; return 0
 
 	elif [ "$action" = 'help' ]; then
 		case "$help_action" in
