@@ -33,13 +33,23 @@ function bashctl__print_error {
 # type: direct
 # signature: bashctl__arg arg_name arg_value [possible_value_of_arg_value [...]]
 # return:
+#   -1 if given arguments are invalid
 #   1 if arg_value is blank
 #     this may happen if the arg being tested was not given
 #   2 if arg_value is not one of the given possible values for it (if any given)
 function bashctl__arg {
 	local name="$1"; shift
 	local value="$1"; shift
+
 	local optional="$1"; shift
+	case "$optional" in
+		true | false) ;;
+		'') optional=false;;
+		*)
+			bashctl__print_error true "bashctl__arg: invalid value for 'optional' argument: '%s'" "$optional" >&2
+			return -1
+			;;
+	esac
 
 	local valid_value
 	local val
